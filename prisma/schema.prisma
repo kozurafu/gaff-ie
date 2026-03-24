@@ -1,0 +1,458 @@
+// Gaff.ie — Irish Property Platform
+// Database Schema — Phase 1 MVP (Dublin Rentals)
+// PostgreSQL + Prisma
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  TENANT
+  LANDLORD
+  AGENT
+  ADMIN
+}
+
+enum VerificationType {
+  ID
+  PROPERTY
+  EMPLOYMENT
+  STUDENT
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationProvider {
+  STRIPE_IDENTITY
+  ONFIDO
+  MANUAL
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  STUDIO
+  ROOM
+  FLAT
+  DUPLEX
+  BUNGALOW
+  PENTHOUSE
+}
+
+enum ListingType {
+  RENT
+  SALE
+  SHARE
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  LET_AGREED
+  SALE_AGREED
+  EXPIRED
+  REMOVED
+}
+
+enum FurnishedStatus {
+  YES
+  NO
+  PARTIAL
+}
+
+enum AlertFrequency {
+  INSTANT
+  DAILY
+  WEEKLY
+}
+
+enum ReportReason {
+  SCAM
+  FAKE_LISTING
+  MISLEADING
+  INAPPROPRIATE
+  DUPLICATE
+  DISCRIMINATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum AgentPlan {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum OrgMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+  INCOMPLETE
+}
+
+enum SubscriptionPlan {
+  TENANT_PRO
+  LANDLORD_PRO
+  AGENT_STARTER
+  AGENT_PROFESSIONAL
+  AGENT_ENTERPRISE
+}
+
+// ─── MODELS ─────────────────────────────────────────────────────────────────
+
+/// Core user account. Every person on the platform has one.
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          UserRole  @default(TENANT)
+  avatar        String?   /// URL to avatar image
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  profile          Profile?
+  verifications    Verification[]
+  listings         Listing[]
+  savedListings    SavedListing[]
+  savedSearches    SavedSearch[]
+  sentMessages     Message[]        @relation("MessageSender")
+  conversations    ConversationParticipant[]
+  reviewsGiven     Review[]         @relation("ReviewsGiven")
+  reviewsReceived  Review[]         @relation("ReviewsReceived")
+  reports          Report[]
+  orgMemberships   AgentOrgMember[]
+  subscription     Subscription?
+  auditLogs        AuditLog[]
+
+  @@index([role])
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// Extended profile for tenants and landlords.
+/// Tenants: budget, move-in date, preferences. Landlords: company info, etc.
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tenant fields
+  budget      Int?          /// Monthly budget in cents (EUR)
+  moveInDate  DateTime?
+  preferences Json?         /// { petFriendly, parking, furnished, locations[], etc. }
+  bio         String?       @db.Text
+
+  // Landlord fields
+  companyName String?
+  rtbNumber   String?       /// RTB registration number
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("profiles")
+}
+
+/// Identity and property verification records.
+model Verification {
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        VerificationType
+  status      VerificationStatus   @default(PENDING)
+  provider    VerificationProvider
+  providerRef String?              /// External reference ID from provider
+  verifiedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([userId, type])
+  @@index([status])
+  @@map("verifications")
+}
+
+/// Property listing — the core entity of the platform.
+model Listing {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Core details
+  title           String
+  description     String          @db.Text
+  propertyType    PropertyType
+  listingType     ListingType
+  status          ListingStatus   @default(DRAFT)
+
+  // Pricing
+  price           Int             /// Price in cents (EUR). Rent = monthly, Sale = total.
+  currency        String          @default("EUR") @db.VarChar(3)
+
+  // Property specs
+  bedrooms        Int             @default(0)
+  bathrooms       Int             @default(0)
+  sqft            Int?            /// Square footage (nullable — not always known)
+
+  // Location
+  eircode         String?         @db.VarChar(7)
+  addressLine1    String
+  addressLine2    String?
+  city            String          @default("Dublin")
+  county          String          @default("Dublin")
+  latitude        Float?
+  longitude       Float?
+
+  // Features & attributes
+  features        Json?           /// { dishwasher, dryer, alarm, garden, balcony, etc. }
+  berRating       String?         @db.VarChar(3) /// A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2, E1, E2, F, G
+  furnished       FurnishedStatus @default(NO)
+  availableFrom   DateTime?
+  hapAccepted     Boolean         @default(false)
+  petsAllowed     Boolean         @default(false)
+  parkingIncluded Boolean         @default(false)
+
+  // Premium & visibility
+  isPremium       Boolean         @default(false)
+  premiumUntil    DateTime?
+  viewCount       Int             @default(0)
+
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  expiresAt       DateTime?       /// Auto-expire after 30 days
+  lastRefreshedAt DateTime?       /// Last time landlord confirmed still active
+
+  // Relations
+  images          ListingImage[]
+  savedBy         SavedListing[]
+  conversations   Conversation[]
+  reports         Report[]
+
+  // Indexes for search performance
+  @@index([status, listingType, city])
+  @@index([status, propertyType, bedrooms])
+  @@index([status, price])
+  @@index([status, hapAccepted])
+  @@index([latitude, longitude])
+  @@index([userId])
+  @@index([eircode])
+  @@index([createdAt])
+  @@index([isPremium, status])
+  @@index([expiresAt])
+  @@map("listings")
+}
+
+/// Images attached to a listing, ordered.
+model ListingImage {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String   /// CDN URL
+  order     Int      @default(0)
+  isPrimary Boolean  @default(false)
+  alt       String?  /// Accessibility alt text
+
+  @@index([listingId, order])
+  @@map("listing_images")
+}
+
+/// Tenant saves a listing for later.
+model SavedListing {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, listingId])
+  @@index([userId])
+  @@map("saved_listings")
+}
+
+/// Saved search with alert preferences.
+model SavedSearch {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  filters        Json           /// { city, minPrice, maxPrice, bedrooms, propertyType, etc. }
+  alertFrequency AlertFrequency @default(DAILY)
+  createdAt      DateTime       @default(now())
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
+/// A conversation between users about a listing.
+model Conversation {
+  id           String   @id @default(cuid())
+  listingId    String?
+  listing      Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([listingId])
+  @@map("conversations")
+}
+
+/// Join table: users participating in a conversation.
+model ConversationParticipant {
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+/// Individual message within a conversation.
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  text           String       @db.Text
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+/// Post-tenancy review (both directions: tenant↔landlord).
+model Review {
+  id         String   @id @default(cuid())
+  reviewerId String
+  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId String
+  reviewee   User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  tenancyId  String?  /// Optional reference to a tenancy record (future)
+  rating     Int      /// 1–5
+  categories Json?    /// { communication: 4, propertyCondition: 3, fairness: 5, maintenance: 4 }
+  text       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([revieweeId])
+  @@index([reviewerId])
+  @@map("reviews")
+}
+
+/// User reports a listing for moderation.
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reporter    User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  listingId   String
+  listing     Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reason      ReportReason
+  description String?      @db.Text
+  status      ReportStatus @default(OPEN)
+  createdAt   DateTime     @default(now())
+  resolvedAt  DateTime?
+
+  @@index([status])
+  @@index([listingId])
+  @@map("reports")
+}
+
+/// Agent organisation / letting agency.
+model AgentOrg {
+  id               String           @id @default(cuid())
+  name             String
+  logo             String?
+  plan             AgentPlan        @default(STARTER)
+  stripeCustomerId String?          @unique
+  createdAt        DateTime         @default(now())
+
+  members      AgentOrgMember[]
+  subscription Subscription?    @relation("OrgSubscription")
+
+  @@map("agent_orgs")
+}
+
+/// Membership of a user in an agent organisation.
+model AgentOrgMember {
+  agentOrgId String
+  agentOrg   AgentOrg      @relation(fields: [agentOrgId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       OrgMemberRole @default(MEMBER)
+  joinedAt   DateTime      @default(now())
+
+  @@id([agentOrgId, userId])
+  @@index([userId])
+  @@map("agent_org_members")
+}
+
+/// Stripe subscription for a user or agent org.
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String?            @unique
+  user                 User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentOrgId           String?            @unique
+  agentOrg             AgentOrg?          @relation("OrgSubscription", fields: [agentOrgId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([status])
+  @@map("subscriptions")
+}
+
+/// Immutable audit log for admin/compliance.
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   /// e.g. "listing.create", "user.verify", "report.resolve"
+  entityType String   /// e.g. "Listing", "User", "Report"
+  entityId   String
+  metadata   Json?    /// Additional context
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
