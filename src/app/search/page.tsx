@@ -9,6 +9,8 @@ const PRICE_OPTIONS = ['', '500', '750', '1000', '1250', '1500', '1750', '2000',
 const BEDROOM_OPTIONS = ['Any', '1', '2', '3', '4', '5+'];
 const PROPERTY_TYPES = ['Any', 'Apartment', 'House', 'Studio', 'Room Share', 'Duplex'];
 const LISTING_TYPES = ['rent', 'sale', 'share'] as const;
+const BER_OPTIONS = ['Any', 'A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D1', 'D2', 'E1', 'E2', 'F', 'G'];
+const FURNISHED_OPTIONS = ['Any', 'YES', 'NO', 'OPTIONAL'];
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
   { value: 'price-asc', label: 'Price: low to high' },
@@ -58,6 +60,9 @@ function SearchPageInner() {
   const [listingType, setListingType] = useState(searchParams.get('listingType') || 'rent');
   const [hapAccepted, setHapAccepted] = useState(false);
   const [petsAllowed, setPetsAllowed] = useState(false);
+  const [parking, setParking] = useState(false);
+  const [furnished, setFurnished] = useState('Any');
+  const [berRating, setBerRating] = useState('Any');
   const [sortBy, setSortBy] = useState('newest');
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -109,6 +114,9 @@ function SearchPageInner() {
     if (listingType) params.set('listingType', listingType.toUpperCase());
     if (hapAccepted) params.set('hapAccepted', 'true');
     if (petsAllowed) params.set('petsAllowed', 'true');
+    if (parking) params.set('parking', 'true');
+    if (furnished !== 'Any') params.set('furnished', furnished);
+    if (berRating !== 'Any') params.set('berRating', berRating);
     params.set('page', String(page));
 
     try {
@@ -126,7 +134,7 @@ function SearchPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, page]);
+  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, page]);
 
   useEffect(() => {
     fetchListings();
@@ -194,15 +202,17 @@ function SearchPageInner() {
             <button
               onClick={() => setMoreFilters(!moreFilters)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                moreFilters || hapAccepted || petsAllowed
+                moreFilters || hapAccepted || petsAllowed || parking || furnished !== 'Any' || berRating !== 'Any'
                   ? 'border-gaff-teal text-gaff-teal bg-gaff-teal-50'
                   : 'border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="14" y2="12" /><line x1="4" y1="18" x2="8" y2="18" /></svg>
-              More
-              {(hapAccepted || petsAllowed) && (
-                <span className="w-1.5 h-1.5 rounded-full bg-gaff-teal" />
+              More filters
+              {(hapAccepted || petsAllowed || parking || furnished !== 'Any' || berRating !== 'Any') && (
+                <span className="ml-1 w-5 h-5 rounded-full bg-gaff-teal text-white text-xs flex items-center justify-center font-bold">
+                  {[hapAccepted, petsAllowed, parking, furnished !== 'Any', berRating !== 'Any'].filter(Boolean).length}
+                </span>
               )}
             </button>
 
@@ -215,17 +225,46 @@ function SearchPageInner() {
 
           {/* Expanded filters */}
           {moreFilters && (
-            <div className="flex flex-wrap gap-4 pt-3 mt-3 border-t border-gray-100 animate-slide-down">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={hapAccepted} onChange={(e) => { setHapAccepted(e.target.checked); setPage(1); }}
-                  className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
-                <span className="text-sm text-gray-700">HAP Accepted</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={petsAllowed} onChange={(e) => { setPetsAllowed(e.target.checked); setPage(1); }}
-                  className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
-                <span className="text-sm text-gray-700">Pets Allowed</span>
-              </label>
+            <div className="pt-3 mt-3 border-t border-gray-100 space-y-3">
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={hapAccepted} onChange={(e) => { setHapAccepted(e.target.checked); setPage(1); }}
+                    className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
+                  <span className="text-sm text-gray-700">HAP Accepted</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={petsAllowed} onChange={(e) => { setPetsAllowed(e.target.checked); setPage(1); }}
+                    className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
+                  <span className="text-sm text-gray-700">Pets Allowed</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={parking} onChange={(e) => { setParking(e.target.checked); setPage(1); }}
+                    className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
+                  <span className="text-sm text-gray-700">Parking</span>
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 mb-1 block">Furnished</label>
+                  <select value={furnished} onChange={(e) => { setFurnished(e.target.value); setPage(1); }} className={`${selectClass} w-32`}>
+                    {FURNISHED_OPTIONS.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Any' : f === 'YES' ? 'Furnished' : f === 'NO' ? 'Unfurnished' : 'Either'}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 mb-1 block">BER Rating</label>
+                  <select value={berRating} onChange={(e) => { setBerRating(e.target.value); setPage(1); }} className={`${selectClass} w-24`}>
+                    {BER_OPTIONS.map((b) => <option key={b} value={b}>{b === 'Any' ? 'Any' : b}</option>)}
+                  </select>
+                </div>
+              </div>
+              {(hapAccepted || petsAllowed || parking || furnished !== 'Any' || berRating !== 'Any') && (
+                <button
+                  onClick={() => { setHapAccepted(false); setPetsAllowed(false); setParking(false); setFurnished('Any'); setBerRating('Any'); setPage(1); }}
+                  className="text-xs text-gaff-teal hover:underline"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -326,6 +365,8 @@ function SearchPageInner() {
                     area={l.area || (l as unknown as {city:string,county:string}).city || ''}
                     verified={l.verified ?? true}
                     hapWelcome={l.hapWelcome ?? (l as unknown as {hapAccepted:boolean}).hapAccepted}
+                    petsAllowed={(l as unknown as {petsAllowed:boolean}).petsAllowed}
+                    parkingIncluded={(l as unknown as {parkingIncluded:boolean}).parkingIncluded}
                     timeAgo={l.createdAt ? timeAgo(l.createdAt) : 'Recently'}
                     propertyType={l.propertyType}
                   />

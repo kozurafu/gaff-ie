@@ -14,6 +14,8 @@ interface ListingCardProps {
   area: string;
   verified?: boolean;
   hapWelcome?: boolean;
+  petsAllowed?: boolean;
+  parkingIncluded?: boolean;
   timeAgo: string;
   propertyType: string;
 }
@@ -59,6 +61,8 @@ export default function ListingCard({
   area,
   verified = false,
   hapWelcome = false,
+  petsAllowed = false,
+  parkingIncluded = false,
   timeAgo,
   propertyType,
 }: ListingCardProps) {
@@ -139,7 +143,17 @@ export default function ListingCard({
           {hapWelcome && (
             <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 gap-1">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
-              HAP Welcome
+              HAP
+            </span>
+          )}
+          {petsAllowed && (
+            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 gap-1">
+              🐾 Pets OK
+            </span>
+          )}
+          {parkingIncluded && (
+            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 gap-1">
+              🅿️ Parking
             </span>
           )}
         </div>

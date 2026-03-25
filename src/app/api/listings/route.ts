@@ -28,12 +28,23 @@ export async function GET(request: NextRequest) {
       where.status = status as Prisma.EnumListingStatusFilter["equals"];
     }
 
+    const hapAccepted = searchParams.get("hapAccepted");
+    const petsAllowed = searchParams.get("petsAllowed");
+    const parking = searchParams.get("parking");
+    const furnished = searchParams.get("furnished");
+    const berRating = searchParams.get("berRating");
+
     if (city) where.city = { contains: city, mode: "insensitive" };
     if (minPrice) where.price = { ...((where.price as Prisma.IntFilter) || {}), gte: parseInt(minPrice) };
     if (maxPrice) where.price = { ...((where.price as Prisma.IntFilter) || {}), lte: parseInt(maxPrice) };
     if (bedrooms) where.bedrooms = parseInt(bedrooms);
     if (propertyType) where.propertyType = propertyType as Prisma.EnumPropertyTypeFilter["equals"];
     if (listingType) where.listingType = listingType as Prisma.EnumListingTypeFilter["equals"];
+    if (hapAccepted === "true") where.hapAccepted = true;
+    if (petsAllowed === "true") where.petsAllowed = true;
+    if (parking === "true") where.parkingIncluded = true;
+    if (furnished === "YES" || furnished === "OPTIONAL") where.furnished = furnished as Prisma.EnumFurnishedStatusFilter["equals"];
+    if (berRating) where.berRating = berRating;
 
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
