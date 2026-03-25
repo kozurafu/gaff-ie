@@ -480,6 +480,8 @@ function AgentDashboard({ listings, activeCount, totalViews, onRefresh }: { list
         <StatCard icon="👥" label="Tenant Pipeline" value={0} />
       </div>
 
+      <AgencySection />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <a href="/listing/new" className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:border-gaff-teal/30 transition-colors group">
           <div className="text-2xl mb-2">➕</div>
@@ -615,6 +617,158 @@ function RecentEnquiries({ userId }: { userId: string }) {
         })}
       </div>
     </section>
+  );
+}
+
+/* ─── Agency Section (Agent Dashboard) ─────────────────────────── */
+
+interface AgencyData {
+  id: string;
+  name: string;
+  logo?: string;
+  description?: string;
+  website?: string;
+  phone?: string;
+  members: { userId: string; role: string; user: { id: string; name: string; avatar?: string } }[];
+}
+
+function AgencySection() {
+  const [agency, setAgency] = useState<AgencyData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ name: '', description: '', website: '', phone: '' });
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(async (data) => {
+        if (!data?.user) return;
+        // Check if user belongs to any agency
+        const r = await fetch('/api/agencies/my');
+        if (r.ok) {
+          const d = await r.json();
+          if (d.agency) setAgency(d.agency);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) return;
+    setCreating(true);
+    try {
+      const r = await fetch('/api/agencies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setAgency(data.agency);
+        setShowCreate(false);
+      }
+    } catch { /* ignore */ }
+    setCreating(false);
+  };
+
+  if (loading) return null;
+
+  if (agency) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-gaff-slate">🏢 My Agency</h2>
+          <a href={`/agency/${agency.id}`} className="text-sm text-gaff-teal hover:underline">View profile →</a>
+        </div>
+        <div className="flex items-center gap-4">
+          {agency.logo ? (
+            <img src={agency.logo} alt={agency.name} className="w-14 h-14 rounded-lg object-cover" />
+          ) : (
+            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-gaff-teal to-gaff-teal/70 flex items-center justify-center text-2xl font-bold text-white">
+              {agency.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="flex-1">
+            <h3 className="font-semibold text-gaff-slate">{agency.name}</h3>
+            <p className="text-sm text-gray-500">{agency.members.length} team member{agency.members.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        {agency.members.length > 0 && (
+          <div className="flex -space-x-2 mt-3">
+            {agency.members.slice(0, 5).map(m => (
+              m.user.avatar ? (
+                <img key={m.userId} src={m.user.avatar} alt={m.user.name} className="w-8 h-8 rounded-full border-2 border-white object-cover" />
+              ) : (
+                <div key={m.userId} className="w-8 h-8 rounded-full border-2 border-white bg-gaff-teal text-white text-xs font-bold flex items-center justify-center">
+                  {m.user.name.charAt(0).toUpperCase()}
+                </div>
+              )
+            ))}
+            {agency.members.length > 5 && (
+              <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center">
+                +{agency.members.length - 5}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-8">
+      {!showCreate ? (
+        <button onClick={() => setShowCreate(true)}
+          className="w-full bg-gradient-to-r from-gaff-teal/10 to-gaff-teal/5 rounded-xl border border-gaff-teal/20 p-5 hover:border-gaff-teal/40 transition-colors text-left group">
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">🏢</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-gaff-slate group-hover:text-gaff-teal">Create Your Agency</h3>
+              <p className="text-sm text-gray-500">Set up an agency profile to showcase your team and listings.</p>
+            </div>
+            <span className="text-gaff-teal text-xl">→</span>
+          </div>
+        </button>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-gaff-slate mb-4">🏢 Create Agency</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gaff-slate mb-1">Agency Name *</label>
+              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gaff-teal/30 focus:outline-none" placeholder="e.g. Dublin Lettings Ltd" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gaff-slate mb-1">Description</label>
+              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gaff-teal/30 focus:outline-none" placeholder="Tell people about your agency..." />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gaff-slate mb-1">Website</label>
+                <input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gaff-teal/30 focus:outline-none" placeholder="https://..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gaff-slate mb-1">Phone</label>
+                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gaff-teal/30 focus:outline-none" placeholder="+353 1 234 5678" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleCreate} disabled={creating || !form.name.trim()}
+                className="flex-1 py-2.5 rounded-lg bg-gaff-teal text-white text-sm font-medium hover:bg-gaff-teal-dark disabled:opacity-50 flex items-center justify-center gap-2">
+                {creating && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                Create Agency
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

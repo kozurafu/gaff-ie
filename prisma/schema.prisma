@@ -400,6 +400,9 @@ model AgentOrg {
   id               String           @id @default(cuid())
   name             String
   logo             String?
+  description      String?          @db.Text
+  website          String?
+  phone            String?
   plan             AgentPlan        @default(STARTER)
   stripeCustomerId String?          @unique
   createdAt        DateTime         @default(now())

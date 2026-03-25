@@ -236,7 +236,7 @@
         "src/app/dashboard/page.tsx"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "AgentOrg and AgentOrgMember models already exist in schema"
     },
     {

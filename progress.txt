@@ -120,6 +120,18 @@
 - Used `contains`+`insensitive` instead of raw SQL tsvector for simplicity and Prisma compatibility — works well for keyword matching
 - Build passes ✅
 
+## 2026-03-25 — T-011: Agent organization profiles and team management (Ralph)
+- Added description, website, phone fields to AgentOrg model in Prisma schema
+- Created API: POST /api/agencies (create agency — agent only, auto-adds as OWNER)
+- Created API: GET /api/agencies/[id] (public profile — includes members, listings, avg rating)
+- Created API: PUT /api/agencies/[id] (update — owner only)
+- Created API: GET /api/agencies/my (get current user's agency)
+- Created /agency/[id] page: public agency profile with header, description, contact, team grid, active listings grid
+- Updated agent dashboard: AgencySection component shows agency info + team avatars if member, or "Create Your Agency" CTA with inline form
+- Agency creation form: name, description, website, phone
+- Build passes ✅
+---
+
 ## 2026-03-25 — T-010: Email notifications for new matching listings (Ralph)
 - Created src/lib/listingNotifications.ts: self-contained module with match scoring (duplicated from matching.ts to avoid server component import issues) and AgentMail email sending
 - notifyMatchingTenants() is fire-and-forget — called after listing creation, doesn't block response
