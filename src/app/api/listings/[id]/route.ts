@@ -44,6 +44,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
       const data: Record<string, unknown> = { status: body.status };
 
+      // Renew: reset createdAt to now when reactivating an expired listing
+      if (body.status === "ACTIVE" && listing.status === "EXPIRED") {
+        data.createdAt = new Date();
+      }
+
       // Set timestamp for agreed statuses
       if (body.status === "LET_AGREED" || body.status === "SALE_AGREED") {
         data.updatedAt = new Date();

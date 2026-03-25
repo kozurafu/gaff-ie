@@ -46,6 +46,13 @@ export async function GET(request: NextRequest) {
     if (furnished === "YES" || furnished === "OPTIONAL") where.furnished = furnished as Prisma.EnumFurnishedStatusFilter["equals"];
     if (berRating) where.berRating = berRating;
 
+    // Auto-expire listings older than 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    await prisma.listing.updateMany({
+      where: { status: "ACTIVE", createdAt: { lt: thirtyDaysAgo } },
+      data: { status: "EXPIRED" },
+    });
+
     const sort = searchParams.get("sort");
     let orderBy: Prisma.ListingOrderByWithRelationInput = { createdAt: "desc" };
     if (sort === "price_asc") orderBy = { price: "asc" };

@@ -266,6 +266,14 @@ function ListingRow({ listing, onStatusChange }: { listing: Listing; onStatusCha
                 </button>
               </>
             )}
+            {listing.status === 'EXPIRED' && (
+              <>
+                <span className="text-gray-300">•</span>
+                <button onClick={() => setModal({ status: 'ACTIVE', label: 'Renew Listing' })} className="text-xs font-medium text-gaff-teal hover:underline">
+                  🔄 Renew
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

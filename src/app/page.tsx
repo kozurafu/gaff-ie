@@ -156,6 +156,7 @@ export default async function Home() {
                   hapWelcome={listing.hapWelcome}
                   timeAgo={timeAgo(listing.createdAt)}
                   propertyType={listing.propertyType}
+                  createdAt={listing.createdAt}
                 />
               ))}
             </div>

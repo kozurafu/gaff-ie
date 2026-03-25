@@ -405,6 +405,7 @@ function SearchPageInner() {
                     parkingIncluded={(l as unknown as {parkingIncluded:boolean}).parkingIncluded}
                     timeAgo={l.createdAt ? timeAgo(l.createdAt) : 'Recently'}
                     propertyType={l.propertyType}
+                    createdAt={l.createdAt}
                   />
                 </a>
               ))}

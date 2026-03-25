@@ -18,6 +18,20 @@ interface ListingCardProps {
   parkingIncluded?: boolean;
   timeAgo: string;
   propertyType: string;
+  createdAt?: string;
+}
+
+function getFreshnessBadge(createdAt?: string): { label: string; className: string } | null {
+  if (!createdAt) return null;
+  const now = Date.now();
+  const created = new Date(createdAt).getTime();
+  const daysSince = (now - created) / (1000 * 60 * 60 * 24);
+  if (daysSince < 3) return { label: '✨ New', className: 'bg-emerald-500 text-white' };
+  if (daysSince > 14) {
+    const weeks = Math.floor(daysSince / 7);
+    return { label: `Listed ${weeks} week${weeks !== 1 ? 's' : ''} ago`, className: 'bg-amber-100 text-amber-700' };
+  }
+  return null;
 }
 
 const typeGradients: Record<string, string> = {
@@ -65,11 +79,13 @@ export default function ListingCard({
   parkingIncluded = false,
   timeAgo,
   propertyType,
+  createdAt,
 }: ListingCardProps) {
   const [saved, setSaved] = useState(false);
 
   const gradient = typeGradients[propertyType] || typeGradients.Apartment;
   const icon = typeIcons[propertyType] || typeIcons.default;
+  const freshness = getFreshnessBadge(createdAt);
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300 shadow-card border border-gray-100/80">
@@ -105,6 +121,13 @@ export default function ListingCard({
         <span className="absolute top-3 left-3 text-xs font-semibold bg-white/90 backdrop-blur-sm text-gaff-slate px-2.5 py-1 rounded-full">
           {propertyType}
         </span>
+
+        {/* Freshness badge */}
+        {freshness && (
+          <span className={`absolute top-3 left-3 mt-8 text-xs font-semibold px-2.5 py-1 rounded-full ${freshness.className}`}>
+            {freshness.label}
+          </span>
+        )}
 
         {/* Time badge */}
         <span className="absolute bottom-3 left-3 text-xs font-medium bg-black/50 text-white/90 px-2.5 py-1 rounded-full backdrop-blur-sm">

@@ -70,3 +70,12 @@
 - Browser back/forward restores previous search state (using replace, not push, to avoid excessive history entries)
 - More filters section auto-expands if any advanced filter is active from URL
 - Build passes ✅
+---
+
+## 2026-03-25 — T-005: Listing status lifecycle and freshness (Ralph)
+- Updated src/components/ui/ListingCard.tsx: added `createdAt` prop, `getFreshnessBadge()` helper — shows "✨ New" badge for <3 days, amber "Listed X weeks ago" for >14 days
+- Updated src/app/api/listings/route.ts: auto-expires ACTIVE listings older than 30 days on every GET (bulk updateMany)
+- Updated src/app/api/listings/[id]/route.ts: PATCH renew support — reactivating an EXPIRED listing resets createdAt to now
+- Updated src/app/dashboard/page.tsx: added 🔄 Renew button for EXPIRED listings
+- Updated src/app/search/page.tsx and src/app/page.tsx: pass createdAt to ListingCard
+- Build passes ✅
