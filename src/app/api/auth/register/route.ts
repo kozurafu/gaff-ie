@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 });
     }
 
-    const validRoles = ["TENANT", "LANDLORD"];
+    const validRoles = ["TENANT", "LANDLORD", "AGENT"];
     const userRole = validRoles.includes(role) ? role : "TENANT";
 
     const existing = await prisma.user.findUnique({ where: { email } });

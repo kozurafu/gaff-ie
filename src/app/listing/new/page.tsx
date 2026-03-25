@@ -43,13 +43,31 @@ export default function NewListingPage() {
     setError('');
     setLoading(true);
     try {
+      const PROPERTY_TYPE_MAP: Record<string, string> = {
+        'Apartment': 'APARTMENT', 'House': 'HOUSE', 'Studio': 'STUDIO',
+        'Room Share': 'ROOM', 'Duplex': 'DUPLEX', 'Bungalow': 'BUNGALOW', 'Penthouse': 'PENTHOUSE',
+      };
+      const filteredImages = form.images.filter(Boolean);
       const body = {
-        ...form,
+        title: form.title,
+        description: form.description,
+        propertyType: PROPERTY_TYPE_MAP[form.propertyType] || 'APARTMENT',
+        listingType: form.listingType.toUpperCase(),
         price: Number(form.price),
         bedrooms: Number(form.bedrooms),
         bathrooms: Number(form.bathrooms),
         sqft: form.sqft ? Number(form.sqft) : undefined,
-        images: form.images.filter(Boolean),
+        addressLine1: form.address,
+        eircode: form.eircode || undefined,
+        berRating: form.berRating || undefined,
+        furnished: form.furnished ? 'YES' : 'NO',
+        availableFrom: form.availableFrom || undefined,
+        hapAccepted: form.hapAccepted,
+        petsAllowed: form.petsAllowed,
+        parkingIncluded: form.parking,
+        features: form.features,
+        status: 'ACTIVE',
+        images: filteredImages.map((url) => ({ url })),
       };
       const res = await fetch('/api/listings', {
         method: 'POST',

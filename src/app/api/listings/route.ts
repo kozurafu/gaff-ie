@@ -16,7 +16,17 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
 
-    const where: Prisma.ListingWhereInput = { status: status as Prisma.EnumListingStatusFilter["equals"] };
+    const mine = searchParams.get("mine");
+    const where: Prisma.ListingWhereInput = {};
+
+    if (mine === "true") {
+      const user = await getCurrentUser();
+      if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      where.userId = user.id;
+    } else {
+      where.status = status as Prisma.EnumListingStatusFilter["equals"];
+    }
+
     if (city) where.city = { contains: city, mode: "insensitive" };
     if (minPrice) where.price = { ...((where.price as Prisma.IntFilter) || {}), gte: parseInt(minPrice) };
     if (maxPrice) where.price = { ...((where.price as Prisma.IntFilter) || {}), lte: parseInt(maxPrice) };

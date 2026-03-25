@@ -2,11 +2,35 @@
 
 import { useState, useEffect } from 'react';
 
+type UserRole = 'TENANT' | 'LANDLORD' | 'AGENT' | 'ADMIN';
+
 interface User {
   id: string;
   name: string;
-  role: 'tenant' | 'landlord';
+  role: UserRole;
 }
+
+const NAV_ITEMS: Record<UserRole, { href: string; label: string }[]> = {
+  TENANT: [
+    { href: '/search', label: 'Search' },
+    { href: '/dashboard', label: 'Dashboard' },
+  ],
+  LANDLORD: [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/search', label: 'Search' },
+    { href: '/listing/new', label: 'Add Property' },
+  ],
+  AGENT: [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/dashboard/tenants', label: 'Tenants' },
+    { href: '/search', label: 'Search' },
+    { href: '/listing/new', label: 'Add Property' },
+  ],
+  ADMIN: [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/search', label: 'Search' },
+  ],
+};
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,6 +51,8 @@ export default function Navbar() {
     window.location.href = '/';
   };
 
+  const navItems = user ? (NAV_ITEMS[user.role] || NAV_ITEMS.TENANT) : [{ href: '/search', label: 'Search' }];
+
   const AuthLinks = ({ mobile = false }: { mobile?: boolean }) => {
     const base = mobile ? 'block py-2 text-sm font-medium' : 'text-sm font-medium';
     if (loading) return null;
@@ -34,12 +60,14 @@ export default function Navbar() {
     if (user) {
       return (
         <>
-          <a href="/dashboard" className={`${base} text-gray-600 hover:text-gaff-teal transition-colors`}>
-            {mobile ? 'Dashboard' : `Hi, ${user.name.split(' ')[0]}`}
-          </a>
-          {user.role === 'landlord' && (
-            <a href="/listing/new" className={`${base} text-gray-600 hover:text-gaff-teal transition-colors`}>
-              List Property
+          {mobile && navItems.map((item) => (
+            <a key={item.href} href={item.href} className={`${base} text-gray-600 hover:text-gaff-teal transition-colors`}>
+              {item.label}
+            </a>
+          ))}
+          {!mobile && (
+            <a href="/dashboard" className={`${base} text-gray-600 hover:text-gaff-teal transition-colors`}>
+              Hi, {user.name.split(' ')[0]}
             </a>
           )}
           {mobile ? (
@@ -89,9 +117,11 @@ export default function Navbar() {
           </a>
 
           <div className="hidden md:flex items-center gap-6">
-            <a href="/search" className="text-sm font-medium text-gray-600 hover:text-gaff-teal transition-colors">
-              Search
-            </a>
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} className="text-sm font-medium text-gray-600 hover:text-gaff-teal transition-colors">
+                {item.label}
+              </a>
+            ))}
             <AuthLinks />
           </div>
 
@@ -110,9 +140,6 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">
           <div className="px-4 py-3 space-y-2">
-            <a href="/search" className="block py-2 text-sm font-medium text-gray-600 hover:text-gaff-teal">
-              Search
-            </a>
             <AuthLinks mobile />
           </div>
         </div>

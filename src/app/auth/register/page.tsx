@@ -3,11 +3,19 @@
 import { useState } from 'react';
 import Footer from '@/components/ui/Footer';
 
+type Role = 'TENANT' | 'LANDLORD' | 'AGENT';
+
+const ROLES: { value: Role; emoji: string; label: string; desc: string; badge?: string }[] = [
+  { value: 'TENANT', emoji: '🏠', label: 'Tenant', desc: 'Find your perfect home' },
+  { value: 'LANDLORD', emoji: '🔑', label: 'Landlord', desc: 'List & manage properties' },
+  { value: 'AGENT', emoji: '🏢', label: 'Estate Agent', desc: 'Manage portfolio & tenants', badge: 'Premium' },
+];
+
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'tenant' | 'landlord'>('tenant');
+  const [role, setRole] = useState<Role>('TENANT');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +30,7 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, email, password, role }),
       });
       if (res.ok) {
-        window.location.href = '/search';
+        window.location.href = role === 'TENANT' ? '/search' : '/dashboard';
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.error || 'Registration failed. Please try again.');
@@ -72,19 +80,25 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(['tenant', 'landlord'] as const).map((r) => (
+                <div className="grid grid-cols-3 gap-2">
+                  {ROLES.map((r) => (
                     <button
-                      key={r}
+                      key={r.value}
                       type="button"
-                      onClick={() => setRole(r)}
-                      className={`py-3 rounded-lg border-2 text-sm font-semibold capitalize transition-colors ${
-                        role === r
+                      onClick={() => setRole(r.value)}
+                      className={`relative py-3 px-2 rounded-lg border-2 text-center transition-colors ${
+                        role === r.value
                           ? 'border-gaff-teal bg-gaff-teal/5 text-gaff-teal'
                           : 'border-gray-200 text-gray-500 hover:border-gray-300'
                       }`}
                     >
-                      {r === 'tenant' ? '🏠 Tenant' : '🔑 Landlord'}
+                      {r.badge && (
+                        <span className="absolute -top-2 right-1 text-[10px] font-bold bg-gradient-to-r from-amber-400 to-amber-500 text-white px-1.5 py-0.5 rounded-full">
+                          {r.badge}
+                        </span>
+                      )}
+                      <div className="text-lg">{r.emoji}</div>
+                      <div className="text-xs font-semibold mt-1">{r.label}</div>
                     </button>
                   ))}
                 </div>
