@@ -39,3 +39,16 @@
 - Updated src/app/layout.tsx — wrapped app in ToastProvider
 - Build passes ✅
 ---
+
+## 2026-03-25 — T-002: Mobile-responsive navbar with auth state (Ralph)
+- Rewrote src/components/ui/Navbar.tsx with full mobile optimization
+- Added user name + role display in mobile slide-in header (avatar circle + name + role badge)
+- Role-aware dashboard label: "My Properties" (landlord), "Portfolio" (agent), "My Dashboard" (tenant)
+- Smooth open/close animation with closing state (slide-out before unmount)
+- Body scroll lock when mobile menu is open
+- Messages icon with unread badge shown in mobile top bar (next to hamburger)
+- Icons added to all mobile menu items for better visual hierarchy
+- Close button at top of slide-in panel
+- Desktop dropdown also uses role-aware dashboard label
+- Build passes ✅
+---

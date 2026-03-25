@@ -46,7 +46,7 @@
         "src/lib/auth.ts"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
