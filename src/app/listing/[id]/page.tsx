@@ -170,6 +170,7 @@ export default function ListingDetailPage() {
   const [saved, setSaved] = useState(false);
   const [savingListing, setSavingListing] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
+  const [matchScore, setMatchScore] = useState<number | null>(null);
 
   const toggleSave = async () => {
     if (savingListing) return;
@@ -194,6 +195,15 @@ export default function ListingDetailPage() {
       .then(data => { if (data?.user) setCurrentUser(data.user); })
       .catch(() => {});
   }, []);
+
+  // Fetch match score for tenants
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/listings/${id}/match`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.match) setMatchScore(data.match.score); })
+      .catch(() => {});
+  }, [id]);
 
   // Check saved state
   useEffect(() => {
@@ -424,6 +434,11 @@ export default function ListingDetailPage() {
                 </span>
                 {listing.isPremium && (
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">⭐ Premium</span>
+                )}
+                {matchScore !== null && matchScore > 0 && (
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${matchScore >= 70 ? 'bg-emerald-50 text-emerald-700' : matchScore >= 40 ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                    🎯 {matchScore}% match
+                  </span>
                 )}
               </div>
               <div className="flex items-start justify-between gap-3">

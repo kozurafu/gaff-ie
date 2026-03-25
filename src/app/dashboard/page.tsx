@@ -293,7 +293,32 @@ function ListingRow({ listing, onStatusChange }: { listing: Listing; onStatusCha
 
 /* ─── Tenant Dashboard ─────────────────────────────────────────── */
 
+interface RecommendedListing {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  county: string;
+  bedrooms: number;
+  bathrooms: number;
+  propertyType: string;
+  listingType: string;
+  matchScore: number;
+  images?: { url: string }[];
+}
+
 function TenantDashboard({ listings }: { listings: Listing[] }) {
+  const [recommended, setRecommended] = useState<RecommendedListing[]>([]);
+  const [recLoading, setRecLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/listings/recommended')
+      .then(r => r.ok ? r.json() : { listings: [] })
+      .then(data => setRecommended((data.listings ?? []).slice(0, 5)))
+      .catch(() => {})
+      .finally(() => setRecLoading(false));
+  }, []);
+
   return (
     <>
       <a href="/dashboard/preferences" className="block bg-gradient-to-r from-[#0C9B8A]/10 to-[#0C9B8A]/5 rounded-2xl border border-[#0C9B8A]/20 p-5 mb-8 hover:border-[#0C9B8A]/40 transition-colors group">
@@ -310,8 +335,51 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard icon="❤️" label="Saved Properties" value={listings.length} />
         <StatCard icon="🔍" label="Saved Searches" value={0} />
-        <StatCard icon="🤖" label="AI Matches" value="Coming soon" />
+        <StatCard icon="🎯" label="AI Matches" value={recommended.length} />
       </div>
+
+      {/* AI Matches Section */}
+      <h2 className="text-xl font-bold text-gaff-slate mb-4">🎯 AI Matches</h2>
+      {recLoading ? (
+        <div className="space-y-3 mb-8">
+          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-gray-200 rounded-xl animate-pulse" />)}
+        </div>
+      ) : recommended.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-2xl border border-gray-100 mb-8">
+          <div className="text-3xl mb-2">🎯</div>
+          <h3 className="text-base font-semibold text-gaff-slate mb-1">No matches yet</h3>
+          <p className="text-gray-500 text-sm mb-4">Set your preferences to get personalised property recommendations.</p>
+          <a href="/dashboard/preferences" className="inline-block bg-gaff-teal text-white px-5 py-2 rounded-lg font-semibold text-sm">Set Preferences</a>
+        </div>
+      ) : (
+        <div className="space-y-3 mb-8">
+          {recommended.map(r => {
+            const img = r.images?.[0]?.url ?? '/placeholder-1.jpg';
+            const isRent = r.listingType === 'RENT' || r.listingType === 'SHARE';
+            return (
+              <a key={r.id} href={`/listing/${r.id}`} className="flex gap-4 bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:border-gaff-teal/30 transition-colors">
+                <div className="w-24 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  <img src={img} alt={r.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.matchScore >= 70 ? 'bg-emerald-50 text-emerald-700' : r.matchScore >= 40 ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {r.matchScore}% match
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-gaff-slate text-sm truncate">{r.title}</h3>
+                  <p className="text-xs text-gray-500">{r.city}, {r.county}</p>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span className="font-semibold text-gaff-slate">€{r.price.toLocaleString()}{isRent ? '/mo' : ''}</span>
+                    <span>{r.bedrooms} bed{r.bedrooms !== 1 ? 's' : ''}</span>
+                    <span>{r.bathrooms} bath</span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
 
       <h2 className="text-xl font-bold text-gaff-slate mb-4">Saved Properties</h2>
       {listings.length === 0 ? (

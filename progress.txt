@@ -79,3 +79,15 @@
 - Updated src/app/dashboard/page.tsx: added 🔄 Renew button for EXPIRED listings
 - Updated src/app/search/page.tsx and src/app/page.tsx: pass createdAt to ListingCard
 - Build passes ✅
+
+## 2026-03-25 — T-006: Smart matching integration with tenant preferences (Ralph)
+- Rewrote src/lib/matching.ts to use TenantPreference model instead of Profile model
+- Match scoring: budget (0-35), location (0-25), bedrooms (0-10), amenities (0-20), moveInDate (0-10) = 100 max
+- Amenities scoring considers: HAP, pets, parking, furnished, propertyType, listingType from amenityPrefs JSON
+- Added getMatchScoreForListing() helper for single-listing lookups
+- Updated src/app/api/listings/recommended/route.ts: uses getTokenFromRequest (API route pattern), returns matchScore + breakdown
+- Created src/app/api/listings/[id]/match/route.ts — GET returns match score for a specific listing for the logged-in tenant
+- Updated src/app/listing/[id]/page.tsx: shows "🎯 X% match" badge next to listing type (green ≥70%, amber ≥40%, gray <40%)
+- Updated src/app/dashboard/page.tsx: tenant dashboard "AI Matches" section shows top 5 recommended listings with scores, images, and links
+- AI Matches stat card now shows actual count instead of "Coming soon"
+- Build passes ✅
