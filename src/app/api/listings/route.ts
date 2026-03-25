@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") || "ACTIVE";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const q = searchParams.get("q")?.trim();
 
     const mine = searchParams.get("mine");
     const where: Prisma.ListingWhereInput = {};
@@ -45,6 +46,17 @@ export async function GET(request: NextRequest) {
     if (parking === "true") where.parkingIncluded = true;
     if (furnished === "YES" || furnished === "OPTIONAL") where.furnished = furnished as Prisma.EnumFurnishedStatusFilter["equals"];
     if (berRating) where.berRating = berRating;
+
+    // Full-text search across title, description, addressLine1, city
+    if (q) {
+      where.OR = [
+        { title: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { addressLine1: { contains: q, mode: "insensitive" } },
+        { city: { contains: q, mode: "insensitive" } },
+        { county: { contains: q, mode: "insensitive" } },
+      ];
+    }
 
     // Auto-expire listings older than 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

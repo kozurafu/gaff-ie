@@ -195,7 +195,7 @@
         "prisma/schema.prisma"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

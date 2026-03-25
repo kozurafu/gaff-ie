@@ -65,6 +65,7 @@ function SearchPageInner() {
   const [parking, setParking] = useState(searchParams.get('parking') === 'true');
   const [furnished, setFurnished] = useState(searchParams.get('furnished') || 'Any');
   const [berRating, setBerRating] = useState(searchParams.get('berRating') || 'Any');
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -81,6 +82,7 @@ function SearchPageInner() {
   // Sync state to URL params
   const syncUrl = useCallback(() => {
     const params = new URLSearchParams();
+    if (query) params.set('q', query);
     if (location && location !== 'Dublin') params.set('location', location);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
@@ -98,7 +100,7 @@ function SearchPageInner() {
     const qs = params.toString();
     const newUrl = qs ? `/search?${qs}` : '/search';
     router.replace(newUrl, { scroll: false });
-  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page, router]);
+  }, [query, location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page, router]);
 
   // Sync URL whenever filters change
   useEffect(() => {
@@ -142,6 +144,7 @@ function SearchPageInner() {
   const fetchListings = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
+    if (query) params.set('q', query);
     if (location && location !== 'All Ireland') params.set('city', location);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
@@ -171,7 +174,7 @@ function SearchPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page]);
+  }, [query, location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page]);
 
   useEffect(() => {
     fetchListings();
@@ -210,6 +213,18 @@ function SearchPageInner() {
       <div className="bg-white border-b border-gray-100 sticky top-[60px] z-30">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
+            {/* Keyword search */}
+            <div className="relative">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                placeholder="Search keywords..."
+                className={`${selectClass} pl-8 w-44`}
+              />
+            </div>
+
             {/* Location */}
             <div className="relative">
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>

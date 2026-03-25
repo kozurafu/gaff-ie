@@ -112,3 +112,10 @@
 - Updated src/app/user/[id]/page.tsx: landlord/agent profiles show response time with clock icon in gaff-teal
 - Response time calculation: finds pairs of incoming→reply messages per conversation, averages the deltas, ignores gaps >7 days
 - Build passes ✅
+
+## 2026-03-25 — T-009: Full-text search (Ralph)
+- Updated src/app/api/listings/route.ts: accepts `?q=keyword` parameter, searches across title, description, addressLine1, city, county using Prisma `contains` with case-insensitive mode (OR across all fields)
+- Updated src/app/search/page.tsx: added keyword search input with magnifying glass icon in the filter bar, syncs to URL params as `q=`, included in fetchListings API call
+- Query state persists in URL (shareable/bookmarkable) and restores on page load
+- Used `contains`+`insensitive` instead of raw SQL tsvector for simplicity and Prisma compatibility — works well for keyword matching
+- Build passes ✅
