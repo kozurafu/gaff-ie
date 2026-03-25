@@ -145,8 +145,8 @@ export default function Home() {
       <section className="py-12 px-4 bg-gaff-slate">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { num: "2,000+", label: "Verified Listings" },
-            { num: "500+", label: "Verified Landlords" },
+            { num: "100%", label: "Landlords Verified" },
+            { num: "€0", label: "To List a Property" },
             { num: "< 4hr", label: "Support Response" },
             { num: "0", label: "Scam Reports" },
           ].map((s, i) => (
