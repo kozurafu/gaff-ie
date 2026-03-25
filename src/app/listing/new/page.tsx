@@ -173,14 +173,14 @@ export default function NewListingPage() {
       }
 
       // Convert price to cents
-      const priceInCents = Math.round(Number(price) * 100);
+      const priceInEuros = Math.round(Number(price));
 
       const body: Record<string, unknown> = {
         title: title.trim(),
         description: description.trim(),
         propertyType,
         listingType,
-        price: priceInCents,
+        price: priceInEuros,
         bedrooms: Number(bedrooms),
         bathrooms: Number(bathrooms),
         sqft: sqft ? Number(sqft) : undefined,

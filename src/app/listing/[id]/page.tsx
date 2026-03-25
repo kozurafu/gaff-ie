@@ -74,7 +74,7 @@ interface SimilarListing {
 }
 
 function formatPrice(price: number, listingType: string): string {
-  const formatted = new Intl.NumberFormat('en-IE', { maximumFractionDigits: 0 }).format(price / 100);
+  const formatted = new Intl.NumberFormat('en-IE', { maximumFractionDigits: 0 }).format(price);
   return `€${formatted}`;
 }
 

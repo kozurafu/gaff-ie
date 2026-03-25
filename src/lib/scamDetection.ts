@@ -80,7 +80,7 @@ export async function analyzeListingForScams(listingId: string): Promise<ScamFla
       flags.push({
         type: 'price_too_low',
         severity: ratio < 0.4 ? 'high' : 'medium',
-        detail: `Price is ${Math.round((1 - ratio) * 100)}% below area average (€${Math.round(areaAvg._avg.price / 100)}/mo avg)`,
+        detail: `Price is ${Math.round((1 - ratio) * 100)}% below area average (€${Math.round(areaAvg._avg.price)}/mo avg)`,
       });
     }
   }

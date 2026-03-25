@@ -140,7 +140,7 @@ export default function LandlordProfilePage() {
                 </div>
                 <div>
                   <p className="font-semibold text-sm text-gaff-slate">{l.title}</p>
-                  <p className="text-gaff-teal font-bold">€{(l.price / 100).toLocaleString()}<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                  <p className="text-gaff-teal font-bold">€{l.price.toLocaleString()}<span className="text-xs font-normal text-gray-500">/mo</span></p>
                   <p className="text-xs text-gray-500">{l.city} · {l.bedrooms} bed</p>
                 </div>
               </a>

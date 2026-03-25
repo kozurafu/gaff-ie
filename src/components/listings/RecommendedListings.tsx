@@ -65,7 +65,7 @@ export default function RecommendedListings() {
               </span>
             </div>
             <div className="p-4">
-              <p className="text-lg font-bold text-gaff-slate">€{(listing.price / 100).toLocaleString()}<span className="text-sm font-normal text-gray-500">/mo</span></p>
+              <p className="text-lg font-bold text-gaff-slate">€{listing.price.toLocaleString()}<span className="text-sm font-normal text-gray-500">/mo</span></p>
               <p className="text-sm font-medium text-gaff-slate truncate">{listing.title}</p>
               <p className="text-xs text-gray-500">{listing.city} · {listing.bedrooms} bed · {listing.bathrooms} bath</p>
               <div className="flex gap-2 mt-2">
