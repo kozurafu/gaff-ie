@@ -91,3 +91,12 @@
 - Updated src/app/dashboard/page.tsx: tenant dashboard "AI Matches" section shows top 5 recommended listings with scores, images, and links
 - AI Matches stat card now shows actual count instead of "Coming soon"
 - Build passes ✅
+
+## 2026-03-25 — T-007: Read receipts and response time tracking (Ralph)
+- Schema already had `readAt` on Message model — no migration needed
+- Conversation GET already marks messages as read when opened — no change needed
+- Updated src/app/messages/page.tsx: sent messages now show ✓ (sent) or ✓✓ (read) indicators with hover tooltip showing read time
+- Created src/app/api/users/[id]/response-time/route.ts: calculates average response time from message history, returns human-readable label ("Usually responds within X hours")
+- Updated src/app/user/[id]/page.tsx: landlord/agent profiles show response time with clock icon in gaff-teal
+- Response time calculation: finds pairs of incoming→reply messages per conversation, averages the deltas, ignores gaps >7 days
+- Build passes ✅

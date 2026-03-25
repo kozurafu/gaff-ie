@@ -74,6 +74,7 @@ export default function UserProfilePage() {
   const [trust, setTrust] = useState<TrustData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [responseTime, setResponseTime] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -86,10 +87,12 @@ export default function UserProfilePage() {
     Promise.all([
       fetch(`/api/users/${id}/profile`).then((r) => (r.ok ? r.json() : null)),
       fetch(`/api/users/${id}/trust`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/users/${id}/response-time`).then((r) => (r.ok ? r.json() : null)),
     ])
-      .then(([profileData, trustData]) => {
+      .then(([profileData, trustData, rtData]) => {
         if (profileData?.user) setUser(profileData.user);
         if (trustData) setTrust(trustData);
+        if (rtData?.label) setResponseTime(rtData.label);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -150,6 +153,12 @@ export default function UserProfilePage() {
                 <span>{user.listings.length} active listing{user.listings.length !== 1 ? 's' : ''}</span>
               )}
             </div>
+            {responseTime && (user.role === 'LANDLORD' || user.role === 'AGENT') && (
+              <p className="text-sm text-[#0C9B8A] mt-1 flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                {responseTime}
+              </p>
+            )}
           </div>
           {trust && <TrustScore score={trust.total} badgeLevel={trust.badgeLevel} size="lg" />}
         </div>

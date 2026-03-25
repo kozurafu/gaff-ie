@@ -272,9 +272,16 @@ export default function MessagesPage() {
                           : 'bg-gray-100 text-gaff-slate rounded-bl-md'
                       }`}>
                         <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                        <p className={`text-[10px] mt-1 ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
-                          {new Date(msg.createdAt).toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                        <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : ''}`}>
+                          <span className={`text-[10px] ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
+                            {new Date(msg.createdAt).toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {isMe && (
+                            <span className={`text-[10px] ${msg.readAt ? 'text-white' : 'text-white/50'}`} title={msg.readAt ? `Read ${new Date(msg.readAt).toLocaleString('en-IE')}` : 'Sent'}>
+                              {msg.readAt ? '✓✓' : '✓'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
