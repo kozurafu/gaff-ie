@@ -141,3 +141,12 @@
 - Email includes: title, price, city, bedrooms, match %, link to listing, HTML + plain text versions
 - Updated src/app/api/listings/route.ts: imports and calls notifyMatchingTenants after scam detection
 - Build passes ✅
+
+## 2026-03-25 — T-012: Admin dashboard with analytics (Ralph)
+- Created src/app/api/admin/stats/route.ts: aggregates all platform stats (users by role, listings by status, messages, verifications by status, recent reports/flagged/registrations)
+- Created src/app/admin/page.tsx: full admin dashboard with 4 stat cards (users, listings, messages, verifications) and 3-column activity feed (recent reports, flagged listings, recent registrations)
+- Admin-only access enforced via role check in API
+- Links to existing /admin/verifications and /admin/flagged pages
+- Time-ago formatting for activity feed items
+- Loading skeleton with animated pulse
+- Build passes ✅
