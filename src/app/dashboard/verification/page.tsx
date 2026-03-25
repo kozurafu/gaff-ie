@@ -46,6 +46,7 @@ function VerificationPageInner() {
   const [message, setMessage] = useState('');
 
   const emailJustVerified = searchParams.get('emailVerified') === 'true';
+  const stripeVerified = searchParams.get('verified') === 'true';
 
   const loadData = async () => {
     try {
@@ -68,6 +69,7 @@ function VerificationPageInner() {
 
   useEffect(() => {
     if (emailJustVerified) setMessage('Email verified successfully! 🎉');
+    if (stripeVerified) setMessage('ID verification submitted! Stripe is processing your documents. 🎉');
     loadData();
   }, []);
 
@@ -116,13 +118,31 @@ function VerificationPageInner() {
 
     return [
       { id: 'email', label: 'Email Verification', description: 'Verify your email address to get started.', status: stepStatus(user.emailVerified) },
-      { id: 'id', label: 'ID Verification', description: 'Upload a valid photo ID for Silver badge.', status: stepStatus(vMap.get('ID') === 'VERIFIED', 'ID') },
+      { id: 'id', label: 'ID Verification', description: 'Verify your identity with Stripe Identity (passport, driving licence, or ID card + selfie).', status: stepStatus(vMap.get('ID') === 'VERIFIED', 'ID') },
       { id: 'property', label: 'Property Ownership', description: 'Provide property ownership documents for Gold badge.', status: stepStatus(vMap.get('PROPERTY') === 'VERIFIED', 'PROPERTY') },
       { id: 'employment', label: 'Employment Verification', description: 'Verify your employment details.', status: stepStatus(vMap.get('EMPLOYMENT') === 'VERIFIED', 'EMPLOYMENT') },
     ];
   }
 
-  const handleStartVerification = (stepId: string) => {
+  const handleStartVerification = async (stepId: string) => {
+    if (stepId === 'id') {
+      // Use Stripe Identity for ID verification
+      setSubmitting(true);
+      try {
+        const res = await fetch('/api/verifications/stripe-session', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        setMessage(data.error || 'Failed to start ID verification');
+      } catch {
+        setMessage('Failed to start ID verification');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
     setModal(stepId as ModalType);
   };
 
