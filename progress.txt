@@ -142,6 +142,17 @@
 - Updated src/app/api/listings/route.ts: imports and calls notifyMatchingTenants after scam detection
 - Build passes ✅
 
+## 2026-03-25 — T-013: SEO and structured data (Ralph)
+- Created src/app/robots.ts — allows all crawlers, blocks /api/, /dashboard/, /admin/, /auth/
+- Created src/app/sitemap.ts — dynamic sitemap with static pages + all ACTIVE listings from DB
+- Added JSON-LD structured data (RealEstateListing schema) to listing detail page via script tag
+- Dynamic document.title on listing detail page ("€X - Title | Gaff.ie")
+- Layout.tsx already had og:title, og:description, og:image — confirmed
+- Created layout.tsx with metadata for: search, faq, contact, auth/login, auth/register
+- About page already had metadata export
+- Build passes ✅
+---
+
 ## 2026-03-25 — T-012: Admin dashboard with analytics (Ralph)
 - Created src/app/api/admin/stats/route.ts: aggregates all platform stats (users by role, listings by status, messages, verifications by status, recent reports/flagged/registrations)
 - Created src/app/admin/page.tsx: full admin dashboard with 4 stat cards (users, listings, messages, verifications) and 3-column activity feed (recent reports, flagged listings, recent registrations)

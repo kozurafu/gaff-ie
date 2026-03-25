@@ -204,6 +204,14 @@ export default function ListingDetailPage() {
     setSavingListing(false);
   };
 
+  // Dynamic page title
+  useEffect(() => {
+    if (listing) {
+      const price = new Intl.NumberFormat('en-IE', { maximumFractionDigits: 0 }).format(listing.price);
+      document.title = `€${price} - ${listing.title} | Gaff.ie`;
+    }
+  }, [listing]);
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
@@ -372,8 +380,40 @@ export default function ListingDetailPage() {
     listing.parkingIncluded && { label: 'Parking Included', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
   ].filter(Boolean) as { label: string; color: string }[];
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: listing.title,
+    description: listing.description?.slice(0, 200),
+    url: typeof window !== 'undefined' ? window.location.href : '',
+    datePosted: listing.createdAt,
+    dateModified: listing.updatedAt,
+    image: images[0]?.url,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: listing.addressLine1,
+      addressLocality: listing.city,
+      addressRegion: listing.county,
+      addressCountry: 'IE',
+      ...(listing.eircode ? { postalCode: listing.eircode } : {}),
+    },
+    offers: {
+      '@type': 'Offer',
+      price: listing.price,
+      priceCurrency: listing.currency || 'EUR',
+      availability: listing.status === 'ACTIVE' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+    },
+    numberOfRooms: listing.bedrooms,
+    floorSize: listing.sqft ? { '@type': 'QuantitativeValue', value: listing.sqft, unitCode: 'FTK' } : undefined,
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen pb-20 lg:pb-0">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Photo Gallery ──────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 pt-4 sm:pt-6">
         {hasImages ? (

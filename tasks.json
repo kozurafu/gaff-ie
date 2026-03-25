@@ -278,7 +278,7 @@
         "src/app/page.tsx"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
