@@ -168,7 +168,25 @@ export default function ListingDetailPage() {
   const [enquirySending, setEnquirySending] = useState(false);
   const [enquirySent, setEnquirySent] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savingListing, setSavingListing] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
+
+  const toggleSave = async () => {
+    if (savingListing) return;
+    setSavingListing(true);
+    try {
+      const res = await fetch('/api/saved-listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSaved(data.saved);
+      }
+    } catch { /* ignore */ }
+    setSavingListing(false);
+  };
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -176,6 +194,20 @@ export default function ListingDetailPage() {
       .then(data => { if (data?.user) setCurrentUser(data.user); })
       .catch(() => {});
   }, []);
+
+  // Check saved state
+  useEffect(() => {
+    if (!id) return;
+    fetch('/api/saved-listings')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.savedListings) {
+          const isSaved = data.savedListings.some((s: { listingId: string }) => s.listingId === id);
+          setSaved(isSaved);
+        }
+      })
+      .catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     fetch(`/api/listings/${id}`)
@@ -394,7 +426,14 @@ export default function ListingDetailPage() {
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">⭐ Premium</span>
                 )}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
+              <div className="flex items-start justify-between gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
+                {currentUser && currentUser.id === listing.user.id && (
+                  <Link href={`/listing/${listing.id}/edit`} className="shrink-0 text-sm font-medium text-gaff-teal border border-gaff-teal/30 px-3 py-1.5 rounded-lg hover:bg-gaff-teal/5 transition-colors">
+                    ✏️ Edit
+                  </Link>
+                )}
+              </div>
               <p className="text-gray-500 mt-1 flex items-center gap-1.5">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
                 {address}
@@ -648,7 +687,7 @@ export default function ListingDetailPage() {
               {/* Actions */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => setSaved(!saved)}
+                  onClick={toggleSave}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition-colors ${saved ? 'border-red-200 bg-red-50 text-red-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
@@ -711,7 +750,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
           <button
-            onClick={() => setSaved(!saved)}
+            onClick={toggleSave}
             className={`p-2.5 rounded-lg border transition-colors ${saved ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 text-gray-400'}`}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">

@@ -143,3 +143,13 @@ export async function analyzeListingForScams(listingId: string): Promise<ScamFla
 
   return flags;
 }
+
+export function calculateRiskScore(flags: ScamFlag[]): number {
+  if (flags.length === 0) return 0;
+  const severityScores: Record<string, number> = { low: 10, medium: 25, high: 40 };
+  let score = 0;
+  for (const flag of flags) {
+    score += severityScores[flag.severity] || 10;
+  }
+  return Math.min(100, score);
+}

@@ -66,6 +66,37 @@ function SearchPageInner() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [moreFilters, setMoreFilters] = useState(false);
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false);
+  const [saveSearchName, setSaveSearchName] = useState('');
+  const [saveSearchDone, setSaveSearchDone] = useState(false);
+  const [savingSearch, setSavingSearch] = useState(false);
+
+  const handleSaveSearch = async () => {
+    if (!saveSearchName.trim() || savingSearch) return;
+    setSavingSearch(true);
+    try {
+      const filters: Record<string, unknown> = {};
+      if (location && location !== 'All Ireland') filters.city = location;
+      if (minPrice) filters.minPrice = minPrice;
+      if (maxPrice) filters.maxPrice = maxPrice;
+      if (bedrooms !== 'Any') filters.bedrooms = bedrooms;
+      if (propertyType !== 'Any') filters.propertyType = propertyType.toUpperCase().replace(' ', '_');
+      if (listingType) filters.listingType = listingType.toUpperCase();
+      if (hapAccepted) filters.hapAccepted = true;
+      if (petsAllowed) filters.petsAllowed = true;
+
+      const res = await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: saveSearchName.trim(), filters }),
+      });
+      if (res.ok) {
+        setSaveSearchDone(true);
+        setTimeout(() => { setSaveSearchOpen(false); setSaveSearchDone(false); setSaveSearchName(''); }, 2000);
+      }
+    } catch { /* ignore */ }
+    setSavingSearch(false);
+  };
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -204,14 +235,54 @@ function SearchPageInner() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Result count */}
         <div className="flex items-center justify-between mb-5">
-          <p className="text-sm text-gray-500">
-            {loading ? 'Searching...' : (
-              <>
-                <span className="font-semibold text-gaff-slate">{total}</span> properties
-                {location !== 'All Ireland' ? ` in ${location}` : ' in Ireland'}
-              </>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-500">
+              {loading ? 'Searching...' : (
+                <>
+                  <span className="font-semibold text-gaff-slate">{total}</span> properties
+                  {location !== 'All Ireland' ? ` in ${location}` : ' in Ireland'}
+                </>
+              )}
+            </p>
+            {!loading && total > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setSaveSearchOpen(!saveSearchOpen)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-gaff-teal hover:text-gaff-teal-dark transition-colors bg-gaff-teal/10 px-3 py-1.5 rounded-full"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" /></svg>
+                  Save search
+                </button>
+                {saveSearchOpen && (
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl border border-gray-200 shadow-lg p-4 z-40 w-72" onClick={e => e.stopPropagation()}>
+                    {saveSearchDone ? (
+                      <div className="text-center py-2">
+                        <p className="text-sm font-medium text-gaff-teal">Search saved ✓</p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-gaff-slate mb-2">Name this search</p>
+                        <input
+                          value={saveSearchName}
+                          onChange={e => setSaveSearchName(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') handleSaveSearch(); }}
+                          placeholder="e.g. Dublin 2 bed under €2k"
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/30"
+                          autoFocus
+                        />
+                        <div className="flex gap-2 mt-3">
+                          <button onClick={() => setSaveSearchOpen(false)} className="flex-1 text-sm text-gray-500 py-2 rounded-lg hover:bg-gray-50">Cancel</button>
+                          <button onClick={handleSaveSearch} disabled={savingSearch || !saveSearchName.trim()} className="flex-1 bg-gaff-teal text-white text-sm font-semibold py-2 rounded-lg hover:bg-gaff-teal-dark disabled:opacity-50">
+                            {savingSearch ? '...' : 'Save'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
-          </p>
+          </div>
           <div className="sm:hidden">
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectClass} text-xs`}>
               {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}

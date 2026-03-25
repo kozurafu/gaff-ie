@@ -21,18 +21,33 @@ interface Listing {
   addressLine1: string;
   city: string;
   propertyType: string;
+  listingType: string;
   status: string;
   viewCount: number;
   createdAt: string;
   images?: { url: string }[];
 }
 
+type FilterTab = 'ALL' | 'ACTIVE' | 'LET_AGREED' | 'DRAFT';
+
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-emerald-50 text-emerald-700',
   DRAFT: 'bg-amber-50 text-amber-700',
   LET_AGREED: 'bg-blue-50 text-blue-700',
+  SALE_AGREED: 'bg-blue-50 text-blue-700',
   EXPIRED: 'bg-gray-100 text-gray-500',
   REMOVED: 'bg-red-50 text-red-700',
+  WITHDRAWN: 'bg-orange-50 text-orange-700',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Active',
+  DRAFT: 'Draft',
+  LET_AGREED: 'Let Agreed',
+  SALE_AGREED: 'Sale Agreed',
+  EXPIRED: 'Expired',
+  REMOVED: 'Removed',
+  WITHDRAWN: 'Withdrawn',
 };
 
 export default function DashboardPage() {
@@ -40,22 +55,25 @@ export default function DashboardPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchListings = async () => {
+    const res = await fetch('/api/listings?mine=true');
+    if (res.ok) {
+      const data = await res.json();
+      setListings(data.listings ?? []);
+    }
+  };
+
   useEffect(() => {
     Promise.all([
       fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)),
       fetch('/api/listings?mine=true').then((r) => (r.ok ? r.json() : null)),
     ])
       .then(([userData, listingsData]) => {
-        if (!userData?.user) {
-          window.location.href = '/auth/login';
-          return;
-        }
+        if (!userData?.user) { window.location.href = '/auth/login'; return; }
         setUser(userData.user);
         setListings(listingsData?.listings ?? []);
       })
-      .catch(() => {
-        window.location.href = '/auth/login';
-      })
+      .catch(() => { window.location.href = '/auth/login'; })
       .finally(() => setLoading(false));
   }, []);
 
@@ -98,21 +116,67 @@ export default function DashboardPage() {
         {user.role === 'TENANT' && <TenantDashboard listings={listings} />}
         {user.role === 'LANDLORD' && (
           <>
-            <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+            <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} onRefresh={fetchListings} />
             <RecentEnquiries userId={user.id} />
           </>
         )}
         {user.role === 'AGENT' && (
           <>
-            <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+            <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} onRefresh={fetchListings} />
             <RecentEnquiries userId={user.id} />
           </>
         )}
       </div>
-      
     </>
   );
 }
+
+/* ─── Confirmation Modal ───────────────────────────────────────── */
+
+function ConfirmModal({ open, title, message, confirmLabel, onConfirm, onCancel, loading: isLoading }: {
+  open: boolean; title: string; message: string; confirmLabel: string;
+  onConfirm: () => void; onCancel: () => void; loading?: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onCancel}>
+      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-bold text-gaff-slate mb-2">{title}</h3>
+        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onCancel} disabled={isLoading} className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button onClick={onConfirm} disabled={isLoading} className="flex-1 py-2.5 rounded-lg bg-gaff-teal text-white text-sm font-medium hover:bg-gaff-teal-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Filter Tabs ──────────────────────────────────────────────── */
+
+function FilterTabs({ active, onChange, counts }: { active: FilterTab; onChange: (t: FilterTab) => void; counts: Record<FilterTab, number> }) {
+  const tabs: { key: FilterTab; label: string }[] = [
+    { key: 'ALL', label: 'All' },
+    { key: 'ACTIVE', label: 'Active' },
+    { key: 'LET_AGREED', label: 'Let Agreed' },
+    { key: 'DRAFT', label: 'Draft' },
+  ];
+  return (
+    <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6">
+      {tabs.map(t => (
+        <button key={t.key} onClick={() => onChange(t.key)}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${active === t.key ? 'bg-white text-gaff-slate shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+          {t.label} <span className="text-xs ml-1 opacity-60">({counts[t.key]})</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Stat Card ────────────────────────────────────────────────── */
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
@@ -128,43 +192,102 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
   );
 }
 
-function ListingRow({ listing }: { listing: Listing }) {
+/* ─── Listing Row with Actions ─────────────────────────────────── */
+
+function ListingRow({ listing, onStatusChange }: { listing: Listing; onStatusChange: (id: string, status: string) => void }) {
   const img = listing.images?.[0]?.url ?? '/placeholder-1.jpg';
+  const [modal, setModal] = useState<{ status: string; label: string } | null>(null);
+  const [updating, setUpdating] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!modal) return;
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/listings/${listing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: modal.status }),
+      });
+      if (res.ok) {
+        onStatusChange(listing.id, modal.status);
+        setModal(null);
+      }
+    } catch { /* ignore */ }
+    setUpdating(false);
+  };
+
+  const isRent = listing.listingType === 'RENT' || listing.listingType === 'SHARE';
+  const agreedStatus = isRent ? 'LET_AGREED' : 'SALE_AGREED';
+  const agreedLabel = isRent ? 'Mark Let Agreed' : 'Mark Sale Agreed';
+
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row gap-4 shadow-sm">
-      <div className="w-full sm:w-40 h-28 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-        <img src={img} alt={listing.title} className="w-full h-full object-cover" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-semibold text-gaff-slate truncate">{listing.title}</h3>
-            <p className="text-sm text-gray-500">{listing.addressLine1}, {listing.city}</p>
+    <>
+      <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row gap-4 shadow-sm">
+        <div className="w-full sm:w-40 h-28 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+          <img src={img} alt={listing.title} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="font-semibold text-gaff-slate truncate">{listing.title}</h3>
+              <p className="text-sm text-gray-500">{listing.addressLine1}, {listing.city}</p>
+            </div>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${STATUS_COLORS[listing.status] || 'bg-gray-100 text-gray-500'}`}>
+              {STATUS_LABELS[listing.status] || listing.status.replace('_', ' ')}
+            </span>
           </div>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${STATUS_COLORS[listing.status] || 'bg-gray-100 text-gray-500'}`}>
-            {listing.status.replace('_', ' ')}
-          </span>
-        </div>
-        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-          <span className="font-semibold text-gaff-slate">€{listing.price.toLocaleString()}/mo</span>
-          <span>{listing.bedrooms} bed{listing.bedrooms !== 1 ? 's' : ''}</span>
-          <span>{listing.bathrooms} bath{listing.bathrooms !== 1 ? 's' : ''}</span>
-          <span className="text-gray-400">👁 {listing.viewCount}</span>
-        </div>
-        <div className="flex gap-2 mt-3">
-          <a href={`/listing/${listing.id}`} className="text-xs font-medium text-gaff-teal hover:underline">View</a>
-          <span className="text-gray-300">•</span>
-          <button className="text-xs font-medium text-gray-500 hover:text-gaff-slate">Edit</button>
+          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <span className="font-semibold text-gaff-slate">€{listing.price.toLocaleString()}{isRent ? '/mo' : ''}</span>
+            <span>{listing.bedrooms} bed{listing.bedrooms !== 1 ? 's' : ''}</span>
+            <span>{listing.bathrooms} bath{listing.bathrooms !== 1 ? 's' : ''}</span>
+            <span className="text-gray-400">👁 {listing.viewCount}</span>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <a href={`/listing/${listing.id}`} className="text-xs font-medium text-gaff-teal hover:underline">View</a>
+            <span className="text-gray-300">•</span>
+            <a href={`/listing/${listing.id}/edit`} className="text-xs font-medium text-gaff-teal hover:underline">Edit</a>
+            {listing.status === 'ACTIVE' && (
+              <>
+                <span className="text-gray-300">•</span>
+                <button onClick={() => setModal({ status: agreedStatus, label: agreedLabel })} className="text-xs font-medium text-blue-600 hover:underline">
+                  {agreedLabel}
+                </button>
+                <span className="text-gray-300">•</span>
+                <button onClick={() => setModal({ status: 'WITHDRAWN', label: 'Withdraw' })} className="text-xs font-medium text-orange-600 hover:underline">
+                  Withdraw
+                </button>
+              </>
+            )}
+            {(listing.status === 'WITHDRAWN' || listing.status === 'DRAFT') && (
+              <>
+                <span className="text-gray-300">•</span>
+                <button onClick={() => setModal({ status: 'ACTIVE', label: 'Reactivate' })} className="text-xs font-medium text-emerald-600 hover:underline">
+                  Reactivate
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <ConfirmModal
+        open={!!modal}
+        title={`${modal?.label}?`}
+        message={`Are you sure you want to ${modal?.label?.toLowerCase()} this listing? This can be changed later.`}
+        confirmLabel={modal?.label || ''}
+        onConfirm={handleConfirm}
+        onCancel={() => setModal(null)}
+        loading={updating}
+      />
+    </>
   );
 }
+
+/* ─── Tenant Dashboard ─────────────────────────────────────────── */
 
 function TenantDashboard({ listings }: { listings: Listing[] }) {
   return (
     <>
-
       <a href="/dashboard/preferences" className="block bg-gradient-to-r from-[#0C9B8A]/10 to-[#0C9B8A]/5 rounded-2xl border border-[#0C9B8A]/20 p-5 mb-8 hover:border-[#0C9B8A]/40 transition-colors group">
         <div className="flex items-center gap-4">
           <span className="text-3xl">🏡</span>
@@ -188,20 +311,35 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
           <div className="text-4xl mb-3">❤️</div>
           <h3 className="text-lg font-semibold text-gaff-slate mb-1">No saved properties</h3>
           <p className="text-gray-500 text-sm mb-4">Start browsing and save the ones you love.</p>
-          <a href="/search" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">
-            Browse properties
-          </a>
+          <a href="/search" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">Browse properties</a>
         </div>
       ) : (
         <div className="space-y-4">
-          {listings.map((l) => <ListingRow key={l.id} listing={l} />)}
+          {listings.map((l) => <ListingRow key={l.id} listing={l} onStatusChange={() => {}} />)}
         </div>
       )}
     </>
   );
 }
 
-function LandlordDashboard({ listings, activeCount, totalViews }: { listings: Listing[]; activeCount: number; totalViews: number }) {
+/* ─── Landlord Dashboard ───────────────────────────────────────── */
+
+function LandlordDashboard({ listings, activeCount, totalViews, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; onRefresh: () => void }) {
+  const [filter, setFilter] = useState<FilterTab>('ALL');
+
+  const counts: Record<FilterTab, number> = {
+    ALL: listings.length,
+    ACTIVE: listings.filter(l => l.status === 'ACTIVE').length,
+    LET_AGREED: listings.filter(l => l.status === 'LET_AGREED' || l.status === 'SALE_AGREED').length,
+    DRAFT: listings.filter(l => l.status === 'DRAFT').length,
+  };
+
+  const filtered = filter === 'ALL' ? listings
+    : filter === 'LET_AGREED' ? listings.filter(l => l.status === 'LET_AGREED' || l.status === 'SALE_AGREED')
+    : listings.filter(l => l.status === filter);
+
+  const handleStatusChange = () => { onRefresh(); };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -210,162 +348,49 @@ function LandlordDashboard({ listings, activeCount, totalViews }: { listings: Li
         <StatCard icon="💬" label="Messages" value={0} />
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gaff-slate">My Listings</h2>
-        <a href="/listing/new" className="bg-gaff-teal text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gaff-teal-dark transition-colors">
-          + Add Listing
-        </a>
+        <a href="/listing/new" className="bg-gaff-teal text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gaff-teal-dark transition-colors">+ Add Listing</a>
       </div>
 
-      {listings.length === 0 ? (
+      <FilterTabs active={filter} onChange={setFilter} counts={counts} />
+
+      {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <div className="text-4xl mb-3">🏠</div>
-          <h3 className="text-lg font-semibold text-gaff-slate mb-1">No listings yet</h3>
-          <p className="text-gray-500 text-sm mb-4">List your first property for free — it takes 5 minutes.</p>
-          <a href="/listing/new" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">
-            Create your first listing
-          </a>
+          <h3 className="text-lg font-semibold text-gaff-slate mb-1">{filter === 'ALL' ? 'No listings yet' : `No ${filter.toLowerCase().replace('_', ' ')} listings`}</h3>
+          <p className="text-gray-500 text-sm mb-4">{filter === 'ALL' ? "List your first property for free — it takes 5 minutes." : 'Try a different filter.'}</p>
+          {filter === 'ALL' && (
+            <a href="/listing/new" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">Create your first listing</a>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
-          {listings.map((l) => <ListingRow key={l.id} listing={l} />)}
+          {filtered.map((l) => <ListingRow key={l.id} listing={l} onStatusChange={handleStatusChange} />)}
         </div>
       )}
     </>
   );
 }
 
-interface ConvMessage {
-  id: string;
-  text: string;
-  senderId: string;
-  sender: { id: string; name: string };
-  createdAt: string;
-  readAt?: string;
-}
+/* ─── Agent Dashboard ──────────────────────────────────────────── */
 
-interface ConvParticipant {
-  userId: string;
-  user: { id: string; name: string; avatar?: string };
-}
+function AgentDashboard({ listings, activeCount, totalViews, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; onRefresh: () => void }) {
+  const [filter, setFilter] = useState<FilterTab>('ALL');
 
-interface DashConversation {
-  id: string;
-  listing?: { id: string; title: string } | null;
-  participants: ConvParticipant[];
-  messages: ConvMessage[];
-  updatedAt: string;
-}
-
-function RecentEnquiries({ userId }: { userId: string }) {
-  const [convs, setConvs] = useState<DashConversation[]>([]);
-  const [replyText, setReplyText] = useState<Record<string, string>>({});
-  const [replying, setReplying] = useState<string | null>(null);
-  const [replyOpen, setReplyOpen] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/messages')
-      .then(r => r.ok ? r.json() : { conversations: [] })
-      .then(d => setConvs((d.conversations ?? []).slice(0, 5)))
-      .catch(() => {});
-  }, []);
-
-  const handleReply = async (convId: string) => {
-    const text = replyText[convId]?.trim();
-    if (!text) return;
-    setReplying(convId);
-    try {
-      const r = await fetch(`/api/messages/${convId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (r.ok) {
-        setReplyText(prev => ({ ...prev, [convId]: '' }));
-        setReplyOpen(null);
-        // Refresh
-        const cr = await fetch('/api/messages');
-        if (cr.ok) {
-          const d = await cr.json();
-          setConvs((d.conversations ?? []).slice(0, 5));
-        }
-      }
-    } catch { /* ignore */ }
-    setReplying(null);
+  const counts: Record<FilterTab, number> = {
+    ALL: listings.length,
+    ACTIVE: listings.filter(l => l.status === 'ACTIVE').length,
+    LET_AGREED: listings.filter(l => l.status === 'LET_AGREED' || l.status === 'SALE_AGREED').length,
+    DRAFT: listings.filter(l => l.status === 'DRAFT').length,
   };
 
-  if (convs.length === 0) return null;
+  const filtered = filter === 'ALL' ? listings
+    : filter === 'LET_AGREED' ? listings.filter(l => l.status === 'LET_AGREED' || l.status === 'SALE_AGREED')
+    : listings.filter(l => l.status === filter);
 
-  return (
-    <section className="mt-10">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gaff-slate">Recent Enquiries</h2>
-        <a href="/messages" className="text-sm font-medium text-gaff-teal hover:underline">View all →</a>
-      </div>
-      <div className="space-y-3">
-        {convs.map(conv => {
-          const other = conv.participants.find(p => p.userId !== userId)?.user;
-          const last = conv.messages[0];
-          const unread = last && last.senderId !== userId && !last.readAt;
+  const handleStatusChange = () => { onRefresh(); };
 
-          return (
-            <div key={conv.id} className={`bg-white rounded-xl border p-4 shadow-sm ${unread ? 'border-gaff-teal/30' : 'border-gray-100'}`}>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gaff-teal to-gaff-teal-dark text-white font-semibold text-sm flex items-center justify-center shrink-0">
-                  {other?.name?.charAt(0)?.toUpperCase() ?? '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm ${unread ? 'font-bold' : 'font-medium'} text-gaff-slate`}>{other?.name ?? 'Unknown'}</span>
-                      {unread && <span className="w-2 h-2 bg-gaff-teal rounded-full" />}
-                    </div>
-                    <span className="text-xs text-gray-400">{last ? new Date(last.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : ''}</span>
-                  </div>
-                  {conv.listing && <p className="text-xs text-gaff-teal">{conv.listing.title}</p>}
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">{last?.text ?? ''}</p>
-
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => setReplyOpen(replyOpen === conv.id ? null : conv.id)}
-                      className="text-xs font-medium text-gaff-teal hover:underline"
-                    >
-                      Quick Reply
-                    </button>
-                    <a href="/messages" className="text-xs font-medium text-gray-400 hover:text-gaff-slate">
-                      Open Chat
-                    </a>
-                  </div>
-
-                  {replyOpen === conv.id && (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={replyText[conv.id] ?? ''}
-                        onChange={e => setReplyText(prev => ({ ...prev, [conv.id]: e.target.value }))}
-                        onKeyDown={e => { if (e.key === 'Enter') handleReply(conv.id); }}
-                        placeholder="Type a reply..."
-                        className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gaff-teal/30"
-                      />
-                      <button
-                        onClick={() => handleReply(conv.id)}
-                        disabled={replying === conv.id}
-                        className="bg-gaff-teal text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-gaff-teal-dark disabled:opacity-50"
-                      >
-                        {replying === conv.id ? '...' : 'Send'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function AgentDashboard({ listings, activeCount, totalViews }: { listings: Listing[]; activeCount: number; totalViews: number }) {
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -388,27 +413,125 @@ function AgentDashboard({ listings, activeCount, totalViews }: { listings: Listi
         </a>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gaff-slate">Portfolio</h2>
-        <a href="/listing/new" className="bg-gaff-teal text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gaff-teal-dark transition-colors">
-          + Add Listing
-        </a>
+        <a href="/listing/new" className="bg-gaff-teal text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gaff-teal-dark transition-colors">+ Add Listing</a>
       </div>
 
-      {listings.length === 0 ? (
+      <FilterTabs active={filter} onChange={setFilter} counts={counts} />
+
+      {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <div className="text-4xl mb-3">🏢</div>
-          <h3 className="text-lg font-semibold text-gaff-slate mb-1">No properties in portfolio</h3>
-          <p className="text-gray-500 text-sm mb-4">Add your first property to get started.</p>
-          <a href="/listing/new" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">
-            Add first property
-          </a>
+          <h3 className="text-lg font-semibold text-gaff-slate mb-1">{filter === 'ALL' ? 'No properties in portfolio' : `No ${filter.toLowerCase().replace('_', ' ')} listings`}</h3>
+          <p className="text-gray-500 text-sm mb-4">{filter === 'ALL' ? 'Add your first property to get started.' : 'Try a different filter.'}</p>
+          {filter === 'ALL' && (
+            <a href="/listing/new" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">Add first property</a>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
-          {listings.map((l) => <ListingRow key={l.id} listing={l} />)}
+          {filtered.map((l) => <ListingRow key={l.id} listing={l} onStatusChange={handleStatusChange} />)}
         </div>
       )}
     </>
+  );
+}
+
+/* ─── Recent Enquiries ─────────────────────────────────────────── */
+
+interface ConvMessage {
+  id: string; text: string; senderId: string; sender: { id: string; name: string }; createdAt: string; readAt?: string;
+}
+interface ConvParticipant {
+  userId: string; user: { id: string; name: string; avatar?: string };
+}
+interface DashConversation {
+  id: string; listing?: { id: string; title: string } | null;
+  participants: ConvParticipant[]; messages: ConvMessage[]; updatedAt: string;
+}
+
+function RecentEnquiries({ userId }: { userId: string }) {
+  const [convs, setConvs] = useState<DashConversation[]>([]);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [replying, setReplying] = useState<string | null>(null);
+  const [replyOpen, setReplyOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/messages')
+      .then(r => r.ok ? r.json() : { conversations: [] })
+      .then(d => setConvs((d.conversations ?? []).slice(0, 5)))
+      .catch(() => {});
+  }, []);
+
+  const handleReply = async (convId: string) => {
+    const text = replyText[convId]?.trim();
+    if (!text) return;
+    setReplying(convId);
+    try {
+      const r = await fetch(`/api/messages/${convId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }),
+      });
+      if (r.ok) {
+        setReplyText(prev => ({ ...prev, [convId]: '' }));
+        setReplyOpen(null);
+        const cr = await fetch('/api/messages');
+        if (cr.ok) { const d = await cr.json(); setConvs((d.conversations ?? []).slice(0, 5)); }
+      }
+    } catch { /* ignore */ }
+    setReplying(null);
+  };
+
+  if (convs.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-gaff-slate">Recent Enquiries</h2>
+        <a href="/messages" className="text-sm font-medium text-gaff-teal hover:underline">View all →</a>
+      </div>
+      <div className="space-y-3">
+        {convs.map(conv => {
+          const other = conv.participants.find(p => p.userId !== userId)?.user;
+          const last = conv.messages[0];
+          const unread = last && last.senderId !== userId && !last.readAt;
+          return (
+            <div key={conv.id} className={`bg-white rounded-xl border p-4 shadow-sm ${unread ? 'border-gaff-teal/30' : 'border-gray-100'}`}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gaff-teal to-gaff-teal-dark text-white font-semibold text-sm flex items-center justify-center shrink-0">
+                  {other?.name?.charAt(0)?.toUpperCase() ?? '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm ${unread ? 'font-bold' : 'font-medium'} text-gaff-slate`}>{other?.name ?? 'Unknown'}</span>
+                      {unread && <span className="w-2 h-2 bg-gaff-teal rounded-full" />}
+                    </div>
+                    <span className="text-xs text-gray-400">{last ? new Date(last.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : ''}</span>
+                  </div>
+                  {conv.listing && <p className="text-xs text-gaff-teal">{conv.listing.title}</p>}
+                  <p className="text-xs text-gray-500 mt-0.5 truncate">{last?.text ?? ''}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => setReplyOpen(replyOpen === conv.id ? null : conv.id)} className="text-xs font-medium text-gaff-teal hover:underline">Quick Reply</button>
+                    <a href="/messages" className="text-xs font-medium text-gray-400 hover:text-gaff-slate">Open Chat</a>
+                  </div>
+                  {replyOpen === conv.id && (
+                    <div className="mt-2 flex gap-2">
+                      <input value={replyText[conv.id] ?? ''} onChange={e => setReplyText(prev => ({ ...prev, [conv.id]: e.target.value }))}
+                        onKeyDown={e => { if (e.key === 'Enter') handleReply(conv.id); }}
+                        placeholder="Type a reply..." className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gaff-teal/30" />
+                      <button onClick={() => handleReply(conv.id)} disabled={replying === conv.id}
+                        className="bg-gaff-teal text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-gaff-teal-dark disabled:opacity-50">
+                        {replying === conv.id ? '...' : 'Send'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

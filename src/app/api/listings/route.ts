@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
+import { analyzeListingForScams, calculateRiskScore } from "@/lib/scamDetection";
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Create listing initially as ACTIVE
     const listing = await prisma.listing.create({
       data: {
         userId: user.id,
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
         addressLine1,
         city: city || "Dublin",
         county: county || "Dublin",
+        status: "ACTIVE",
         ...(rest.eircode && { eircode: rest.eircode }),
         ...(rest.addressLine2 && { addressLine2: rest.addressLine2 }),
         ...(rest.sqft && { sqft: parseInt(rest.sqft) }),
@@ -91,7 +94,6 @@ export async function POST(request: NextRequest) {
         ...(rest.furnished && { furnished: rest.furnished }),
         ...(rest.availableFrom && { availableFrom: new Date(rest.availableFrom) }),
         ...(rest.features && { features: rest.features }),
-        ...(rest.status && { status: rest.status }),
         ...(images?.length && {
           images: {
             create: images.map((img: { url: string; alt?: string; isPrimary?: boolean }, i: number) => ({
@@ -106,8 +108,30 @@ export async function POST(request: NextRequest) {
       include: { images: true, user: { select: { id: true, name: true } } },
     });
 
-    return NextResponse.json({ listing }, { status: 201 });
-  } catch {
+    // Run scam detection
+    const flags = await analyzeListingForScams(listing.id);
+    const riskScore = calculateRiskScore(flags);
+
+    let riskAction: 'auto_flagged' | 'warning' | 'clear' = 'clear';
+
+    if (riskScore > 70) {
+      // High risk: set to DRAFT, create FlaggedListing
+      riskAction = 'auto_flagged';
+      await prisma.listing.update({ where: { id: listing.id }, data: { status: "DRAFT" } });
+      await prisma.$executeRaw`INSERT INTO flagged_listings (id, "listingId", "riskScore", flags, status, "createdAt") VALUES (${`fl_${listing.id}`}, ${listing.id}, ${riskScore}, ${JSON.stringify(flags)}::jsonb, 'PENDING', NOW())`;
+      listing.status = "DRAFT" as typeof listing.status;
+    } else if (riskScore >= 40) {
+      // Medium risk: keep ACTIVE but flag for review
+      riskAction = 'warning';
+      await prisma.$executeRaw`INSERT INTO flagged_listings (id, "listingId", "riskScore", flags, status, "createdAt") VALUES (${`fl_${listing.id}`}, ${listing.id}, ${riskScore}, ${JSON.stringify(flags)}::jsonb, 'PENDING', NOW())`;
+    }
+
+    return NextResponse.json({
+      listing,
+      riskAssessment: { riskScore, flags, action: riskAction },
+    }, { status: 201 });
+  } catch (err) {
+    console.error('Listing creation error:', err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

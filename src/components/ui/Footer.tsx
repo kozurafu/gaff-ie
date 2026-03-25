@@ -1,5 +1,5 @@
 export default function Footer() {
-  const existingLinks = ['/search', '/auth/login', '/auth/register', '/dashboard', '/listing/new'];
+  const existingLinks = ['/search', '/auth/login', '/auth/register', '/dashboard', '/listing/new', '/about', '/contact', '/faq'];
 
   const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
     const exists = existingLinks.includes(href);
@@ -74,6 +74,7 @@ export default function Footer() {
             <ul className="text-sm space-y-3">
               <FooterLink href="/about">About</FooterLink>
               <FooterLink href="/contact">Contact</FooterLink>
+              <FooterLink href="/faq">FAQ</FooterLink>
               <FooterLink href="/privacy">Privacy</FooterLink>
               <FooterLink href="/terms">Terms</FooterLink>
             </ul>

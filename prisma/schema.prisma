@@ -479,6 +479,22 @@ model TenantPreference {
   @@map("tenant_preferences")
 }
 
+/// Auto-flagged listing from scam detection.
+model FlaggedListing {
+  id         String   @id @default(cuid())
+  listingId  String
+  riskScore  Int      /// 0-100
+  flags      Json     /// Array of ScamFlag objects
+  status     String   @default("PENDING") /// PENDING, APPROVED, REMOVED
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([status])
+  @@index([listingId])
+  @@map("flagged_listings")
+}
+
 /// Immutable audit log for admin/compliance.
 model AuditLog {
   id         String   @id @default(cuid())
