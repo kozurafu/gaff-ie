@@ -1,0 +1,325 @@
+{
+  "project": "gaff-ie",
+  "repo": "/data/workspace/gaff",
+  "buildCmd": "npm run build",
+  "pushCmd": "cd /data/workspace/gaff && git add -A && git commit -m 'feat: ${TASK_ID} - ${TASK_TITLE}' && git push origin main",
+  "deployCmd": "curl -s -X GET 'http://62.171.142.50:8000/api/v1/deploy?uuid=uc0gg4wkwwg0scc44ooowgws' -H 'Authorization: Bearer 13|gSfiGq086lrffy3M9oGxTMD6pBfrz7pPt1EsMzZQ6cd247ed'",
+  "techStack": "Next.js 16, Tailwind v4 (@import 'tailwindcss' + @theme), TypeScript, Prisma 5, PostgreSQL, jose (JWT), bcryptjs",
+  "dbExternal": "postgres://gaff:gaff_secure_2026_xK9m@62.171.142.50:6000/gaff",
+  "authPattern": "JWT via jose, cookie name gaff-token, use getTokenFromRequest() for API routes, getCurrentUser() for server components. See src/lib/auth.ts",
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Error handling and loading states",
+      "description": "Create custom 404 and 500 error pages. Add a reusable Toast notification component (success/error/info) that can be triggered from anywhere. Create a global toast context provider. Style: clean white with gaff-teal accent, matching the rest of the site.",
+      "acceptanceCriteria": [
+        "Custom not-found.tsx page at app level with helpful message and link home",
+        "Custom error.tsx page at app level with retry button",
+        "Toast component with success/error/info variants, auto-dismiss after 5s",
+        "ToastProvider wrapping the app in layout.tsx",
+        "useToast() hook for triggering toasts from client components",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/layout.tsx",
+        "src/app/globals.css"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "T-002",
+      "title": "Mobile-responsive navbar with auth state",
+      "description": "The Navbar needs proper mobile optimization: hamburger menu that slides in, auth-aware (show login/register when logged out, show dashboard/messages/logout when logged in), role-aware dashboard link. Currently the navbar exists but mobile UX is poor.",
+      "acceptanceCriteria": [
+        "Hamburger menu on mobile (<768px) with slide-in panel",
+        "Shows user name and role when logged in",
+        "Login/Register buttons when logged out",
+        "Dashboard link changes label based on role (My Properties for landlord, My Dashboard for tenant, Portfolio for agent)",
+        "Messages link with unread badge (already exists, ensure it works on mobile)",
+        "Smooth open/close animation",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/components/ui/Navbar.tsx",
+        "src/lib/auth.ts"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-003",
+      "title": "User profile page with edit mode",
+      "description": "Build a public profile page at /user/[id] and a profile edit page at /dashboard/profile. Public profile shows: name, avatar, role, member since, verification badges, trust score. For landlords: active listings, response rate. For tenants: bio, preferences summary. Edit mode: update name, phone, bio, avatar URL.",
+      "acceptanceCriteria": [
+        "Public profile page at /user/[id] with role-appropriate content",
+        "Profile edit page at /dashboard/profile",
+        "API route GET/PUT /api/users/[id]/profile",
+        "Displays verification badges and trust score",
+        "Landlord profile shows their active listings",
+        "Edit form saves via PUT",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/landlord/[id]/page.tsx",
+        "prisma/schema.prisma",
+        "src/lib/auth.ts",
+        "src/lib/trustScore.ts"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-004",
+      "title": "Search sort and URL state persistence",
+      "description": "The search page needs: (1) sorting that actually works (newest, price asc, price desc \u2014 currently the sort select exists but doesn't send to API), (2) URL state \u2014 all filter values should sync to URL params so searches are shareable/bookmarkable, and (3) the API needs to accept a sort parameter.",
+      "acceptanceCriteria": [
+        "API accepts ?sort=newest|price_asc|price_desc and orders results accordingly",
+        "Search page syncs all filter state to URL params (location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sort)",
+        "URL params are read on page load to restore filters",
+        "Clicking browser back restores previous search",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/search/page.tsx",
+        "src/app/api/listings/route.ts"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-005",
+      "title": "Listing status lifecycle and freshness",
+      "description": "Implement listing freshness: (1) listings auto-expire after 30 days (cron or check on read), (2) landlords get a 'Renew' button on expired listings, (3) stale listing indicator on cards older than 14 days ('Listed 3 weeks ago' in amber), (4) recently listed badge for <3 days.",
+      "acceptanceCriteria": [
+        "Listings older than 30 days automatically marked EXPIRED (via API check or background job)",
+        "Renew button on dashboard for expired listings (resets createdAt, sets ACTIVE)",
+        "ListingCard shows 'New' badge for listings < 3 days old",
+        "ListingCard shows amber 'Listed X weeks ago' for listings > 14 days",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/components/ui/ListingCard.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/api/listings/route.ts",
+        "src/app/api/listings/[id]/route.ts"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-006",
+      "title": "Smart matching integration with tenant preferences",
+      "description": "Wire up the matching.ts library to use real tenant preferences from TenantPreference model. When a tenant views a listing, show a match percentage based on their preferences. On the tenant dashboard, show top 5 recommended listings. The recommended API at /api/listings/recommended should use actual preference data.",
+      "acceptanceCriteria": [
+        "GET /api/listings/recommended returns listings ranked by match score for the authenticated tenant",
+        "Match score calculated from: budget fit, location match, bedroom match, amenity overlap (must-haves vs nice-to-haves)",
+        "Listing detail page shows 'X% match' badge for logged-in tenants with preferences set",
+        "Tenant dashboard 'AI Matches' section shows top 5 recommended listings with scores",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/lib/matching.ts",
+        "src/app/api/listings/recommended/route.ts",
+        "src/app/api/preferences/route.ts",
+        "prisma/schema.prisma",
+        "src/app/dashboard/page.tsx"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-007",
+      "title": "Read receipts and response time tracking",
+      "description": "Add read receipts to the messaging system and track landlord/agent response times. (1) When a user opens a conversation, mark messages as read (already partially done). (2) Show read status (double tick) on sent messages. (3) Track average response time per user. (4) Display response time on landlord/agent profile ('Usually responds within 2 hours').",
+      "acceptanceCriteria": [
+        "Messages have a readAt timestamp field (add to schema if missing)",
+        "When recipient opens conversation, unread messages marked as read with timestamp",
+        "Sent messages show single tick (sent) or double tick (read) indicators",
+        "API calculates average response time for a user",
+        "Landlord/agent profile card shows 'Usually responds within X hours'",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "prisma/schema.prisma",
+        "src/app/api/messages/route.ts",
+        "src/app/api/messages/[conversationId]/route.ts",
+        "src/app/messages/page.tsx"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-008",
+      "title": "Viewing scheduler",
+      "description": "Build a viewing scheduling system. Landlords/agents create available viewing slots for a listing. Tenants can book a slot. Both parties get confirmation. (1) API for creating/listing/booking viewing slots. (2) Viewing slots section on listing detail page. (3) My viewings section on tenant dashboard. (4) Viewing management on landlord dashboard.",
+      "acceptanceCriteria": [
+        "ViewingSlot model added to Prisma schema (listingId, dateTime, duration, maxAttendees, bookedBy[])",
+        "API: POST /api/listings/[id]/viewings (create slot - landlord/agent), GET (list slots), POST /api/viewings/[id]/book (book - tenant)",
+        "Listing detail page shows available viewing slots with 'Book viewing' button",
+        "Tenant dashboard shows upcoming viewings",
+        "Landlord dashboard shows upcoming viewings with attendee list",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "prisma/schema.prisma",
+        "src/app/listing/[id]/page.tsx",
+        "src/app/dashboard/page.tsx"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-009",
+      "title": "Full-text search",
+      "description": "Implement full-text search across listing titles, descriptions, and addresses. Add a search input to the search page that filters by keyword in addition to the existing filters. Use Prisma's fullTextSearch or raw SQL with PostgreSQL's to_tsvector.",
+      "acceptanceCriteria": [
+        "Search page has a text input for keyword search",
+        "API accepts ?q=keyword parameter",
+        "Searches across title, description, addressLine1, city",
+        "Results ranked by relevance",
+        "Keyword highlighted or bolded in results (nice-to-have)",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/search/page.tsx",
+        "src/app/api/listings/route.ts",
+        "prisma/schema.prisma"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-010",
+      "title": "Email notifications for new matching listings",
+      "description": "When a new listing is created that matches a tenant's preferences (>= 70% match score), send them an email notification via AgentMail. Respect the tenant's alertFrequency preference (instant/daily/weekly). For instant: send immediately. For daily/weekly: skip (would need a batch job, out of scope for now \u2014 just implement instant).",
+      "acceptanceCriteria": [
+        "After listing creation, check all tenants with preferences set",
+        "For tenants with alertFrequency='instant' and emailAlerts=true, calculate match score",
+        "If match >= 70%, send email via AgentMail API with listing details and link",
+        "Email includes: listing title, price, location, match percentage, link to listing",
+        "Rate limit: max 10 notification emails per new listing (prevent spam on popular areas)",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/api/listings/route.ts",
+        "src/app/api/preferences/route.ts",
+        "src/lib/matching.ts",
+        "prisma/schema.prisma"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "AgentMail API: POST https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send, Bearer am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce"
+    },
+    {
+      "id": "T-011",
+      "title": "Agent organization profiles and team management",
+      "description": "Build agent organization features. Agents belong to an agency (AgentOrg). Agency has a profile page showing all their listings, team members, and reviews. Agency admin can invite team members.",
+      "acceptanceCriteria": [
+        "Agency profile page at /agency/[id] showing: name, logo, description, team members, all listings, average rating",
+        "API: GET /api/agencies/[id], POST /api/agencies (create), PUT /api/agencies/[id] (update)",
+        "Agent dashboard shows agency info and team members",
+        "Agent can create an agency from their dashboard if they don't belong to one",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "prisma/schema.prisma",
+        "src/app/dashboard/page.tsx"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "AgentOrg and AgentOrgMember models already exist in schema"
+    },
+    {
+      "id": "T-012",
+      "title": "Admin dashboard with analytics",
+      "description": "Build an admin dashboard at /admin showing: total users (by role), total listings (by status), total messages, total verifications (by status), recent reports, recent flagged listings. Simple stat cards + recent activity feed.",
+      "acceptanceCriteria": [
+        "Admin dashboard at /admin with stat cards",
+        "Stats: total users (breakdown by role), total listings (by status), messages sent, verifications pending/completed",
+        "Recent activity feed: last 10 reports, last 10 flagged listings, last 10 registrations",
+        "Admin-only access (role check)",
+        "API: GET /api/admin/stats",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/admin/verifications/page.tsx",
+        "src/app/admin/flagged/page.tsx",
+        "prisma/schema.prisma"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-013",
+      "title": "SEO and structured data",
+      "description": "Add proper SEO: (1) metadata on all pages (title, description, og:image), (2) JSON-LD structured data on listing detail pages (RealEstateListing schema), (3) sitemap.xml generation, (4) robots.txt.",
+      "acceptanceCriteria": [
+        "Every page has appropriate <title> and meta description",
+        "Listing detail pages have JSON-LD structured data (RealEstateListing)",
+        "Homepage has og:title, og:description, og:image meta tags",
+        "sitemap.xml at /sitemap.xml listing all public pages",
+        "robots.txt at /robots.txt allowing search engines",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/layout.tsx",
+        "src/app/listing/[id]/page.tsx",
+        "src/app/page.tsx"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "T-014",
+      "title": "Password reset flow",
+      "description": "Implement forgot password / reset password flow. User enters email, receives reset link via AgentMail, clicks link, sets new password.",
+      "acceptanceCriteria": [
+        "Forgot password page at /auth/forgot-password with email input",
+        "POST /api/auth/forgot-password sends reset email with HMAC-signed token",
+        "Reset page at /auth/reset-password?token=X with new password form",
+        "POST /api/auth/reset-password validates token and updates password",
+        "Token expires after 1 hour",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/api/auth/verify-email/route.ts",
+        "src/lib/auth.ts",
+        "src/app/auth/login/page.tsx"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Follow same HMAC pattern as email verification. Use AgentMail API for sending."
+    },
+    {
+      "id": "T-015",
+      "title": "Listing analytics and view tracking",
+      "description": "Track listing views properly and show analytics to landlords/agents. (1) Increment viewCount when listing detail page is loaded (debounced, not on every refresh). (2) Show view count on listing cards and detail page. (3) Landlord dashboard shows views over time (simple: just total views per listing).",
+      "acceptanceCriteria": [
+        "GET /api/listings/[id] increments viewCount (with basic dedup: don't count same session twice within 1 hour)",
+        "View count visible on listing detail page",
+        "View count visible on dashboard listing rows (already shown, ensure it updates)",
+        "Build passes"
+      ],
+      "filesToRead": [
+        "src/app/api/listings/[id]/route.ts",
+        "src/app/listing/[id]/page.tsx",
+        "src/app/dashboard/page.tsx"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

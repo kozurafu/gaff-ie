@@ -1,0 +1,41 @@
+## Codebase Patterns
+- Prices stored in EUROS (not cents) — never divide by 100
+- Use `getTokenFromRequest(request)` for API route auth, `getCurrentUser()` for server components (uses cookies)
+- JWT secret: 'gaff-production-secret-x7k9m2p4' (prod), cookie name: 'gaff-token'
+- Tailwind v4: use `@import "tailwindcss"` and `@theme` block in globals.css, NOT tailwind.config.js
+- Color: gaff-teal is #0C9B8A, gaff-slate is #1E293B, gaff-warm is #FAFAF9
+- All new models need `npx prisma db push` to sync with the external DB at 62.171.142.50:6000
+- AgentMail API: POST to https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send with Bearer token
+- Listing creation now runs scam detection — scores >70 auto-flag to DRAFT
+- The app runs on HTTP (not HTTPS) — cookies must NOT have secure:true
+- `output: 'standalone'` in next.config.ts is required for Docker/Coolify deployment
+- FurnishedStatus enum: YES | NO | OPTIONAL
+- ListingType enum: RENT | SALE | SHARE
+- PropertyType enum: APARTMENT | HOUSE | STUDIO | ROOM_SHARE | DUPLEX | DETACHED | SEMI_DETACHED | TERRACED | BUNGALOW | PENTHOUSE
+- UserRole enum: TENANT | LANDLORD | AGENT | ADMIN
+
+---
+## 2026-03-25 — Initial Build (Pre-Ralph)
+- Full-stack app built: 50+ source files, 29+ routes
+- Auth system (JWT cookies, register/login/logout)
+- Listing CRUD with search, filters (location, price, beds, type, HAP, pets, parking, furnished, BER)
+- Messaging system (WhatsApp-style inbox, enquiry flow, unread badges)
+- Tenant preference profiles ("My Ideal Gaff")
+- Verification system (email auto-verify, Stripe Identity for ID, manual review for property/employment)
+- Saved listings and saved searches
+- Listing edit page + status management (let agreed, withdraw, reactivate)
+- Image upload API
+- Scam detection integrated into listing creation
+- Admin queues (verifications, flagged listings)
+- About, Contact (AgentMail), FAQ pages
+- Report listing modal
+- Homepage redesigned: search-first, no fake metrics
+---
+
+## 2026-03-25 — T-001: Error handling and loading states (Ralph)
+- Created src/app/not-found.tsx — custom 404 page with link home
+- Created src/app/error.tsx — custom 500 page with retry button
+- Created src/components/ui/Toast.tsx — ToastProvider + useToast hook, success/error/info variants, auto-dismiss 5s
+- Updated src/app/layout.tsx — wrapped app in ToastProvider
+- Build passes ✅
+---
