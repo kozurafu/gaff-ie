@@ -381,6 +381,8 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
         </div>
       )}
 
+      <UpcomingViewings role="TENANT" />
+
       <h2 className="text-xl font-bold text-gaff-slate mb-4">Saved Properties</h2>
       {listings.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
@@ -423,6 +425,8 @@ function LandlordDashboard({ listings, activeCount, totalViews, onRefresh }: { l
         <StatCard icon="👁" label="Total Views" value={totalViews} />
         <StatCard icon="💬" label="Messages" value={0} />
       </div>
+
+      <UpcomingViewings role="LANDLORD" />
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gaff-slate">My Listings</h2>
@@ -488,6 +492,8 @@ function AgentDashboard({ listings, activeCount, totalViews, onRefresh }: { list
           <p className="text-sm text-gray-500">View interested tenants and match to properties</p>
         </a>
       </div>
+
+      <UpcomingViewings role="AGENT" />
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gaff-slate">Portfolio</h2>
@@ -605,6 +611,71 @@ function RecentEnquiries({ userId }: { userId: string }) {
                 </div>
               </div>
             </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Upcoming Viewings ────────────────────────────────────────── */
+
+interface ViewingData {
+  slotId?: string;
+  bookingId?: string;
+  dateTime: string;
+  durationMins: number;
+  listing: { id: string; title: string; addressLine1: string; city: string; images?: { url: string }[] };
+  attendees?: { id: string; name: string; email: string }[];
+  maxAttendees?: number;
+}
+
+function UpcomingViewings({ role }: { role: string }) {
+  const [viewings, setViewings] = useState<ViewingData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/viewings/my')
+      .then(r => r.ok ? r.json() : { viewings: [] })
+      .then(data => setViewings(data.viewings ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+  if (viewings.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-xl font-bold text-gaff-slate mb-4">📅 Upcoming Viewings</h2>
+      <div className="space-y-3">
+        {viewings.map((v, i) => {
+          const dt = new Date(v.dateTime);
+          const dateStr = dt.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
+          const timeStr = dt.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+          const img = v.listing.images?.[0]?.url;
+          return (
+            <a key={v.slotId || v.bookingId || i} href={`/listing/${v.listing.id}`}
+              className="flex gap-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-gaff-teal/30 transition-colors">
+              {img && (
+                <div className="w-20 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold text-gaff-teal bg-gaff-teal/10 px-2 py-0.5 rounded-full">{dateStr} · {timeStr}</span>
+                  <span className="text-xs text-gray-400">{v.durationMins} mins</span>
+                </div>
+                <h3 className="font-semibold text-gaff-slate text-sm truncate">{v.listing.title}</h3>
+                <p className="text-xs text-gray-500">{v.listing.addressLine1}, {v.listing.city}</p>
+                {(role === 'LANDLORD' || role === 'AGENT') && v.attendees && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {v.attendees.length === 0 ? 'No bookings yet' : `${v.attendees.length} attendee${v.attendees.length !== 1 ? 's' : ''}: ${v.attendees.map(a => a.name).join(', ')}`}
+                  </p>
+                )}
+              </div>
+            </a>
           );
         })}
       </div>

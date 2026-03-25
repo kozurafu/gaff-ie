@@ -92,6 +92,18 @@
 - AI Matches stat card now shows actual count instead of "Coming soon"
 - Build passes ✅
 
+## 2026-03-25 — T-008: Viewing scheduler (Ralph)
+- Added ViewingSlot and ViewingBooking models to Prisma schema with proper relations
+- Created API: GET/POST /api/listings/[id]/viewings (list/create slots — owner only can create)
+- Created API: POST/DELETE /api/viewings/[id]/book (book/cancel — tenants only)
+- Created API: GET /api/viewings/my (returns upcoming viewings for current user, role-aware)
+- Updated listing detail page: shows "Upcoming Viewings" section with book button, inline booking flow with optional message
+- Updated dashboard: added UpcomingViewings component for all roles (tenant sees booked viewings, landlord/agent sees slots with attendee lists)
+- Slots show spots remaining, full indicator, and booked confirmation
+- Auth uses `user.sub` from JWTPayload (not userId) — important pattern for getTokenFromRequest
+- Build passes ✅
+---
+
 ## 2026-03-25 — T-007: Read receipts and response time tracking (Ralph)
 - Schema already had `readAt` on Message model — no migration needed
 - Conversation GET already marks messages as read when opened — no change needed

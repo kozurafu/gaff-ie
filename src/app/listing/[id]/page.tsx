@@ -73,6 +73,17 @@ interface SimilarListing {
   user: { name: string; verifications?: { status: string }[] };
 }
 
+interface ViewingSlotData {
+  id: string;
+  dateTime: string;
+  durationMins: number;
+  maxAttendees: number;
+  notes?: string;
+  bookedCount: number;
+  isFull: boolean;
+  userBooked: boolean;
+}
+
 function formatPrice(price: number, listingType: string): string {
   const formatted = new Intl.NumberFormat('en-IE', { maximumFractionDigits: 0 }).format(price);
   return `€${formatted}`;
@@ -171,6 +182,10 @@ export default function ListingDetailPage() {
   const [savingListing, setSavingListing] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
   const [matchScore, setMatchScore] = useState<number | null>(null);
+  const [viewingSlots, setViewingSlots] = useState<ViewingSlotData[]>([]);
+  const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
+  const [bookingMessage, setBookingMessage] = useState('');
+  const [bookingInProgress, setBookingInProgress] = useState(false);
 
   const toggleSave = async () => {
     if (savingListing) return;
@@ -204,6 +219,32 @@ export default function ListingDetailPage() {
       .then(data => { if (data?.match) setMatchScore(data.match.score); })
       .catch(() => {});
   }, [id]);
+
+  // Fetch viewing slots
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/listings/${id}/viewings`)
+      .then(r => r.ok ? r.json() : { slots: [] })
+      .then(data => setViewingSlots(data.slots ?? []))
+      .catch(() => {});
+  }, [id]);
+
+  const bookViewing = async (slotId: string) => {
+    setBookingInProgress(true);
+    try {
+      const res = await fetch(`/api/viewings/${slotId}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: bookingMessage }),
+      });
+      if (res.ok) {
+        setViewingSlots(prev => prev.map(s => s.id === slotId ? { ...s, userBooked: true, bookedCount: s.bookedCount + 1, isFull: s.bookedCount + 1 >= s.maxAttendees } : s));
+        setBookingSlotId(null);
+        setBookingMessage('');
+      }
+    } catch { /* ignore */ }
+    setBookingInProgress(false);
+  };
 
   // Check saved state
   useEffect(() => {
@@ -581,6 +622,60 @@ export default function ListingDetailPage() {
                 ))}
               </div>
             </section>
+
+            {/* Viewing Slots */}
+            {viewingSlots.length > 0 && (
+              <section className="bg-white rounded-xl border border-gray-100 p-6 mb-5">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">📅 Upcoming Viewings</h2>
+                <div className="space-y-3">
+                  {viewingSlots.map(slot => {
+                    const dt = new Date(slot.dateTime);
+                    const dateStr = dt.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
+                    const timeStr = dt.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
+                    const spotsLeft = slot.maxAttendees - slot.bookedCount;
+                    return (
+                      <div key={slot.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+                        <div>
+                          <div className="font-semibold text-gaff-slate text-sm">{dateStr} at {timeStr}</div>
+                          <div className="text-xs text-gray-500">{slot.durationMins} mins{slot.notes ? ` · ${slot.notes}` : ''}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {slot.isFull ? <span className="text-red-500 font-medium">Fully booked</span> : <span>{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</span>}
+                          </div>
+                        </div>
+                        <div>
+                          {slot.userBooked ? (
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">✓ Booked</span>
+                          ) : slot.isFull ? (
+                            <span className="text-xs text-gray-400 px-3 py-1.5">Full</span>
+                          ) : bookingSlotId === slot.id ? (
+                            <div className="flex flex-col gap-2 items-end">
+                              <input
+                                value={bookingMessage}
+                                onChange={e => setBookingMessage(e.target.value)}
+                                placeholder="Optional message..."
+                                className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-gaff-teal/30"
+                              />
+                              <div className="flex gap-1.5">
+                                <button onClick={() => setBookingSlotId(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                                <button onClick={() => bookViewing(slot.id)} disabled={bookingInProgress}
+                                  className="text-xs font-semibold text-white bg-gaff-teal px-3 py-1 rounded-lg hover:bg-gaff-teal-dark disabled:opacity-50">
+                                  {bookingInProgress ? '...' : 'Confirm'}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button onClick={() => setBookingSlotId(slot.id)}
+                              className="text-xs font-semibold text-gaff-teal border border-gaff-teal/30 px-3 py-1.5 rounded-lg hover:bg-gaff-teal/5 transition-colors">
+                              Book Viewing
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Map Placeholder */}
             <section className="bg-white rounded-xl border border-gray-100 p-6 mb-5">

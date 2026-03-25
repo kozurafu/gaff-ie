@@ -152,6 +152,7 @@ model User {
   subscription     Subscription?
   auditLogs        AuditLog[]
   tenantPreference TenantPreference?
+  viewingBookings  ViewingBooking[]
 
   @@index([role])
   @@index([email])
@@ -257,6 +258,7 @@ model Listing {
   savedBy         SavedListing[]
   conversations   Conversation[]
   reports         Report[]
+  viewingSlots    ViewingSlot[]
 
   // Indexes for search performance
   @@index([status, listingType, city])
@@ -477,6 +479,38 @@ model TenantPreference {
   updatedAt       DateTime @updatedAt
 
   @@map("tenant_preferences")
+}
+
+/// Viewing slot created by landlord/agent for a listing.
+model ViewingSlot {
+  id             String   @id @default(cuid())
+  listingId      String
+  listing        Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  dateTime       DateTime
+  durationMins   Int      @default(30)
+  maxAttendees   Int      @default(1)
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  bookings ViewingBooking[]
+
+  @@index([listingId, dateTime])
+  @@map("viewing_slots")
+}
+
+/// Booking of a viewing slot by a tenant.
+model ViewingBooking {
+  id            String      @id @default(cuid())
+  viewingSlotId String
+  viewingSlot   ViewingSlot @relation(fields: [viewingSlotId], references: [id], onDelete: Cascade)
+  tenantId      String
+  tenant        User        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  message       String?     @db.Text
+  createdAt     DateTime    @default(now())
+
+  @@unique([viewingSlotId, tenantId])
+  @@index([tenantId])
+  @@map("viewing_bookings")
 }
 
 /// Auto-flagged listing from scam detection.
