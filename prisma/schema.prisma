@@ -151,6 +151,7 @@ model User {
   orgMemberships   AgentOrgMember[]
   subscription     Subscription?
   auditLogs        AuditLog[]
+  tenantPreference TenantPreference?
 
   @@index([role])
   @@index([email])
@@ -437,6 +438,45 @@ model Subscription {
 
   @@index([status])
   @@map("subscriptions")
+}
+
+/// Tenant preference profile for smart matching and alerts.
+model TenantPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Location
+  preferredAreas  String[]
+  maxCommute      Int?
+  commuteAddress  String?
+  commuteMode     String?
+
+  // Budget
+  budgetMin       Int?
+  budgetMax       Int?
+
+  // Property
+  bedroomsMin     Int?
+  propertyTypes   String[]
+  listingType     String   @default("RENT")
+  moveInDate      DateTime?
+  leaseLengthMin  Int?
+
+  // Nice-to-haves
+  amenityPrefs    Json     @default("{}")
+
+  // HAP
+  hapRequired     Boolean  @default(false)
+
+  // Notification prefs
+  alertFrequency  String   @default("instant")
+  emailAlerts     Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("tenant_preferences")
 }
 
 /// Immutable audit log for admin/compliance.

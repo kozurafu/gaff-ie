@@ -21,6 +21,7 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -30,6 +31,17 @@ export default function Navbar() {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch unread count when logged in
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = () => {
+      fetch('/api/messages/unread').then(r => r.ok ? r.json() : { count: 0 }).then(d => setUnreadCount(d.count ?? 0)).catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -92,6 +104,14 @@ export default function Navbar() {
                       Place Ad
                     </a>
                   )}
+                  <a href="/messages" className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors text-gaff-slate-600 hover:text-gaff-teal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gaff-teal text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </a>
                   <div className="relative">
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -113,6 +133,10 @@ export default function Navbar() {
                           <a href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gaff-slate-600 hover:bg-gray-50">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
                             Dashboard
+                          </a>
+                          <a href="/messages" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gaff-slate-600 hover:bg-gray-50">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                            Messages{unreadCount > 0 && <span className="ml-auto bg-gaff-teal text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
                           </a>
                           {(user.role === 'LANDLORD' || user.role === 'AGENT') && (
                             <a href="/listing/new" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gaff-slate-600 hover:bg-gray-50">
@@ -178,6 +202,9 @@ export default function Navbar() {
               {!loading && user ? (
                 <>
                   <a href="/dashboard" className="block px-4 py-3 rounded-lg text-sm font-medium text-gaff-slate-600 hover:bg-gray-50">Dashboard</a>
+                  <a href="/messages" className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-gaff-slate-600 hover:bg-gray-50">
+                    Messages{unreadCount > 0 && <span className="bg-gaff-teal text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
+                  </a>
                   {(user.role === 'LANDLORD' || user.role === 'AGENT') && (
                     <a href="/listing/new" className="block px-4 py-3 rounded-lg text-sm font-medium text-gaff-slate-600 hover:bg-gray-50">Place Ad</a>
                   )}

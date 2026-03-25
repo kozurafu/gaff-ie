@@ -1,283 +1,631 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
-const PROPERTY_TYPES = ['Apartment', 'House', 'Studio', 'Room Share', 'Duplex', 'Bungalow', 'Penthouse'];
-const LISTING_TYPES = ['rent', 'sale', 'share'];
-const BER_RATINGS = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D1', 'D2', 'E1', 'E2', 'F', 'G', 'Exempt'];
-const FEATURES = [
-  'Central Heating', 'Double Glazing', 'Alarm', 'Washing Machine', 'Dryer', 'Dishwasher',
-  'Garden', 'Balcony', 'Wheelchair Access', 'Cable TV', 'Broadband', 'Storage',
+const PROPERTY_TYPES = [
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'HOUSE', label: 'House' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'ROOM', label: 'Room' },
+  { value: 'FLAT', label: 'Flat' },
+  { value: 'DUPLEX', label: 'Duplex' },
+  { value: 'BUNGALOW', label: 'Bungalow' },
+  { value: 'PENTHOUSE', label: 'Penthouse' },
 ];
 
+const LISTING_TYPES = [
+  { value: 'RENT', label: 'To Rent' },
+  { value: 'SALE', label: 'For Sale' },
+  { value: 'SHARE', label: 'House Share' },
+];
+
+const BER_RATINGS = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D1', 'D2', 'E1', 'E2', 'F', 'G', 'Exempt'];
+
+const COUNTIES = [
+  // Republic of Ireland (26)
+  'Carlow', 'Cavan', 'Clare', 'Cork', 'Donegal', 'Dublin', 'Galway', 'Kerry',
+  'Kildare', 'Kilkenny', 'Laois', 'Leitrim', 'Limerick', 'Longford', 'Louth',
+  'Mayo', 'Meath', 'Monaghan', 'Offaly', 'Roscommon', 'Sligo', 'Tipperary',
+  'Waterford', 'Westmeath', 'Wexford', 'Wicklow',
+  // Northern Ireland (6)
+  'Antrim', 'Armagh', 'Derry', 'Down', 'Fermanagh', 'Tyrone',
+];
+
+const FEATURES = [
+  { key: 'parking', label: 'Parking', icon: '🅿️' },
+  { key: 'garden', label: 'Garden', icon: '🌿' },
+  { key: 'petsAllowed', label: 'Pets Allowed', icon: '🐾' },
+  { key: 'furnished', label: 'Furnished', icon: '🛋️' },
+  { key: 'hapAccepted', label: 'HAP Accepted', icon: '🏛️' },
+  { key: 'broadband', label: 'Broadband', icon: '📶' },
+  { key: 'evCharging', label: 'EV Charging', icon: '⚡' },
+  { key: 'alarm', label: 'Alarm System', icon: '🔔' },
+  { key: 'wheelchairAccessible', label: 'Wheelchair Accessible', icon: '♿' },
+  { key: 'washingMachine', label: 'Washing Machine', icon: '🧺' },
+  { key: 'dryer', label: 'Dryer', icon: '💨' },
+  { key: 'dishwasher', label: 'Dishwasher', icon: '🍽️' },
+];
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+interface PhotoFile {
+  file: File;
+  preview: string;
+  id: string;
+}
+
 export default function NewListingPage() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [authChecked, setAuthChecked] = useState(false);
   const [authorized, setAuthorized] = useState(false);
+
+  // Form state
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [propertyType, setPropertyType] = useState('APARTMENT');
+  const [listingType, setListingType] = useState('RENT');
+  const [bedrooms, setBedrooms] = useState('1');
+  const [bathrooms, setBathrooms] = useState('1');
+  const [sqft, setSqft] = useState('');
+  const [berRating, setBerRating] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [county, setCounty] = useState('Dublin');
+  const [eircode, setEircode] = useState('');
+  const [price, setPrice] = useState('');
+  const [priceFrequency, setPriceFrequency] = useState('month');
+  const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({});
+  const [photos, setPhotos] = useState<PhotoFile[]>([]);
+  const [availableFrom, setAvailableFrom] = useState('');
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data?.user) {
-          window.location.href = '/auth/login';
-          return;
-        }
-        if (data.user.role === 'TENANT') {
-          window.location.href = '/search';
-          return;
-        }
+        if (!data?.user) { window.location.href = '/auth/login'; return; }
+        if (data.user.role === 'TENANT') { window.location.href = '/search'; return; }
         setAuthorized(true);
         setAuthChecked(true);
       })
       .catch(() => { window.location.href = '/auth/login'; });
   }, []);
 
-  const [form, setForm] = useState({
-    title: '', description: '', propertyType: 'Apartment', listingType: 'rent',
-    price: '', bedrooms: '1', bathrooms: '1', sqft: '', address: '', eircode: '',
-    berRating: '', furnished: false, availableFrom: '',
-    hapAccepted: false, petsAllowed: false, parking: false,
-    features: [] as string[], images: ['', '', '', '', ''],
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const toggleFeature = (key: string) => {
+    setFeatureFlags(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
-  const set = (key: string, value: string | boolean | string[]) =>
-    setForm((f) => ({ ...f, [key]: value }));
-
-  const toggleFeature = (f: string) =>
-    setForm((prev) => ({
-      ...prev,
-      features: prev.features.includes(f) ? prev.features.filter((x) => x !== f) : [...prev.features, f],
+  const handlePhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 10 - photos.length;
+    const toAdd = files.slice(0, remaining);
+    const newPhotos: PhotoFile[] = toAdd.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      id: Math.random().toString(36).slice(2),
     }));
+    setPhotos(prev => [...prev, ...newPhotos]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-  const setImage = (i: number, val: string) =>
-    setForm((prev) => {
-      const imgs = [...prev.images];
-      imgs[i] = val;
-      return { ...prev, images: imgs };
+  const removePhoto = (id: string) => {
+    setPhotos(prev => {
+      const photo = prev.find(p => p.id === id);
+      if (photo) URL.revokeObjectURL(photo.preview);
+      return prev.filter(p => p.id !== id);
     });
+  };
+
+  const movePhoto = (id: string, direction: -1 | 1) => {
+    setPhotos(prev => {
+      const idx = prev.findIndex(p => p.id === id);
+      if (idx < 0) return prev;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const arr = [...prev];
+      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      return arr;
+    });
+  };
+
+  const validate = (): boolean => {
+    const errs: FormErrors = {};
+    if (!title.trim()) errs.title = 'Title is required';
+    else if (title.trim().length < 10) errs.title = 'Title must be at least 10 characters';
+    if (!description.trim()) errs.description = 'Description is required';
+    else if (description.trim().length < 30) errs.description = 'Description must be at least 30 characters';
+    if (!addressLine1.trim()) errs.addressLine1 = 'Address is required';
+    if (!city.trim()) errs.city = 'City/Town is required';
+    if (!price || Number(price) <= 0) errs.price = 'Valid price is required';
+    if (eircode && !/^[A-Za-z0-9]{7}$/.test(eircode.replace(/\s/g, ''))) errs.eircode = 'Invalid Eircode format';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setSubmitError('');
+    if (!validate()) return;
+
+    setSubmitting(true);
     try {
-      const PROPERTY_TYPE_MAP: Record<string, string> = {
-        'Apartment': 'APARTMENT', 'House': 'HOUSE', 'Studio': 'STUDIO',
-        'Room Share': 'ROOM', 'Duplex': 'DUPLEX', 'Bungalow': 'BUNGALOW', 'Penthouse': 'PENTHOUSE',
-      };
-      const filteredImages = form.images.filter(Boolean);
-      const body = {
-        title: form.title,
-        description: form.description,
-        propertyType: PROPERTY_TYPE_MAP[form.propertyType] || 'APARTMENT',
-        listingType: form.listingType.toUpperCase(),
-        price: Number(form.price),
-        bedrooms: Number(form.bedrooms),
-        bathrooms: Number(form.bathrooms),
-        sqft: form.sqft ? Number(form.sqft) : undefined,
-        addressLine1: form.address,
-        eircode: form.eircode || undefined,
-        berRating: form.berRating || undefined,
-        furnished: form.furnished ? 'YES' : 'NO',
-        availableFrom: form.availableFrom || undefined,
-        hapAccepted: form.hapAccepted,
-        petsAllowed: form.petsAllowed,
-        parkingIncluded: form.parking,
-        features: form.features,
+      // Extract special fields from features
+      const hapAccepted = !!featureFlags.hapAccepted;
+      const petsAllowed = !!featureFlags.petsAllowed;
+      const parkingIncluded = !!featureFlags.parking;
+      const furnished = featureFlags.furnished ? 'YES' : 'NO';
+
+      // Build features object (excluding fields that are top-level in schema)
+      const features: Record<string, boolean> = {};
+      for (const f of FEATURES) {
+        if (f.key !== 'parking' && f.key !== 'petsAllowed' && f.key !== 'hapAccepted' && f.key !== 'furnished') {
+          features[f.key] = !!featureFlags[f.key];
+        }
+      }
+
+      // Convert price to cents
+      const priceInCents = Math.round(Number(price) * 100);
+
+      const body: Record<string, unknown> = {
+        title: title.trim(),
+        description: description.trim(),
+        propertyType,
+        listingType,
+        price: priceInCents,
+        bedrooms: Number(bedrooms),
+        bathrooms: Number(bathrooms),
+        sqft: sqft ? Number(sqft) : undefined,
+        berRating: berRating || undefined,
+        addressLine1: addressLine1.trim(),
+        addressLine2: addressLine2.trim() || undefined,
+        city: city.trim(),
+        county,
+        eircode: eircode.replace(/\s/g, '') || undefined,
+        hapAccepted,
+        petsAllowed,
+        parkingIncluded,
+        furnished,
+        features,
+        availableFrom: availableFrom || undefined,
         status: 'ACTIVE',
-        images: filteredImages.map((url) => ({ url })),
       };
+
+      // Upload photos if any — for now just send URLs (placeholder)
+      // In production this would upload to S3/Cloudflare R2 first
+      if (photos.length > 0) {
+        // For now, convert to base64 data URLs as a fallback
+        const imageData = await Promise.all(
+          photos.map(async (p, i) => {
+            return { url: p.preview, order: i, isPrimary: i === 0 };
+          })
+        );
+        body.images = imageData;
+      }
+
       const res = await fetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+
       if (res.ok) {
         const data = await res.json();
-        window.location.href = `/listing/${data.listing?.id ?? data.id ?? ''}`;
+        const newId = data.listing?.id ?? data.id;
+        router.push(`/listing/${newId}`);
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || 'Failed to create listing');
+        setSubmitError(data.error || 'Failed to create listing. Please try again.');
       }
     } catch {
-      setError('Something went wrong');
+      setSubmitError('Something went wrong. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const inputClass =
-    'w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/40 focus:border-gaff-teal';
-  const selectClass = `${inputClass} appearance-none`;
-  const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
+  const inputClass = (field?: string) =>
+    `w-full rounded-lg border ${field && errors[field] ? 'border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-gaff-teal/40 focus:border-gaff-teal'} px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-colors bg-white`;
+  const selectClass = (field?: string) => `${inputClass(field)} appearance-none`;
+  const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
+  const sectionTitle = 'text-lg font-bold text-gray-900 mb-1';
+  const sectionSubtitle = 'text-sm text-gray-500 mb-5';
 
   if (!authChecked || !authorized) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-gaff-teal border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Checking permissions...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      <div className="bg-gaff-slate text-white py-8 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold">List your property</h1>
-          <p className="text-gray-400 text-sm mt-1">Free to list. Reach thousands of verified tenants.</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gray-900 text-white">
+        <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10">
+          <h1 className="text-2xl sm:text-3xl font-bold">List your property</h1>
+          <p className="text-gray-400 mt-2">Free to list. Reach thousands of verified tenants across Ireland.</p>
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-100 text-red-700 text-sm">{error}</div>
+        {submitError && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+            {submitError}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic info */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ── Section 1: Property Basics ─────────────────────── */}
           <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gaff-slate mb-4">Basic Information</h2>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">1</div>
+              <h2 className={sectionTitle}>Property Basics</h2>
+            </div>
+            <p className={sectionSubtitle}>Tell us about your property.</p>
+
             <div className="space-y-4">
               <div>
-                <label className={labelClass}>Title</label>
-                <input required value={form.title} onChange={(e) => set('title', e.target.value)}
-                  placeholder="Bright 2-bed apartment in Ranelagh" className={inputClass} />
+                <label className={labelClass}>Listing Title *</label>
+                <input
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="e.g. Bright 2-bed apartment in Ranelagh with balcony"
+                  className={inputClass('title')}
+                />
+                {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
               </div>
+
               <div>
-                <label className={labelClass}>Description</label>
-                <textarea required value={form.description} onChange={(e) => set('description', e.target.value)}
-                  placeholder="Describe the property, area, transport links..." rows={5}
-                  className={`${inputClass} resize-none`} />
+                <label className={labelClass}>Description *</label>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Describe the property, area, transport links, nearby amenities..."
+                  rows={6}
+                  className={`${inputClass('description')} resize-none`}
+                />
+                {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
+                <p className="text-xs text-gray-400 mt-1">{description.length} characters</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Property Type</label>
-                  <select value={form.propertyType} onChange={(e) => set('propertyType', e.target.value)} className={selectClass}>
-                    {PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  <select value={propertyType} onChange={e => setPropertyType(e.target.value)} className={selectClass()}>
+                    {PROPERTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelClass}>Listing Type</label>
-                  <select value={form.listingType} onChange={(e) => set('listingType', e.target.value)} className={selectClass}>
-                    {LISTING_TYPES.map((t) => <option key={t} value={t} className="capitalize">{t}</option>)}
-                  </select>
+                  <div className="grid grid-cols-3 gap-2">
+                    {LISTING_TYPES.map(t => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => setListingType(t.value)}
+                        className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${listingType === t.value
+                          ? 'bg-gaff-teal text-white border-gaff-teal shadow-sm'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gaff-teal/40'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Details */}
+          {/* ── Section 2: Details ─────────────────────────────── */}
           <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gaff-slate mb-4">Property Details</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className={labelClass}>Price (€)</label>
-                <input type="number" required min="0" value={form.price} onChange={(e) => set('price', e.target.value)}
-                  placeholder="2000" className={inputClass} />
-              </div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">2</div>
+              <h2 className={sectionTitle}>Property Details</h2>
+            </div>
+            <p className={sectionSubtitle}>Bedrooms, bathrooms, and other specs.</p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <label className={labelClass}>Bedrooms</label>
-                <select value={form.bedrooms} onChange={(e) => set('bedrooms', e.target.value)} className={selectClass}>
-                  {[1,2,3,4,5,6,7,8].map((n) => <option key={n} value={n}>{n}</option>)}
+                <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} className={selectClass()}>
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                    <option key={n} value={n}>{n === 0 ? 'Studio' : n}</option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Bathrooms</label>
-                <select value={form.bathrooms} onChange={(e) => set('bathrooms', e.target.value)} className={selectClass}>
-                  {[1,2,3,4,5].map((n) => <option key={n} value={n}>{n}</option>)}
+                <select value={bathrooms} onChange={e => setBathrooms(e.target.value)} className={selectClass()}>
+                  {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Sq Ft</label>
-                <input type="number" min="0" value={form.sqft} onChange={(e) => set('sqft', e.target.value)}
-                  placeholder="850" className={inputClass} />
+                <label className={labelClass}>Size (sq ft)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={sqft}
+                  onChange={e => setSqft(e.target.value)}
+                  placeholder="850"
+                  className={inputClass()}
+                />
               </div>
-            </div>
-          </section>
-
-          {/* Location */}
-          <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gaff-slate mb-4">Location</h2>
-            <div className="space-y-4">
               <div>
-                <label className={labelClass}>Address</label>
-                <input required value={form.address} onChange={(e) => set('address', e.target.value)}
-                  placeholder="12 Ranelagh Road, Dublin 6" className={inputClass} />
+                <label className={labelClass}>BER Rating</label>
+                <select value={berRating} onChange={e => setBerRating(e.target.value)} className={selectClass()}>
+                  <option value="">Select BER</option>
+                  {BER_RATINGS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Eircode</label>
-                  <input value={form.eircode} onChange={(e) => set('eircode', e.target.value)}
-                    placeholder="D06 F2X0" className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>BER Rating</label>
-                  <select value={form.berRating} onChange={(e) => set('berRating', e.target.value)} className={selectClass}>
-                    <option value="">Select BER</option>
-                    {BER_RATINGS.map((r) => <option key={r}>{r}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Features & options */}
-          <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gaff-slate mb-4">Features & Options</h2>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
-              {FEATURES.map((f) => (
-                <label key={f} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input type="checkbox" checked={form.features.includes(f)} onChange={() => toggleFeature(f)}
-                    className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
-                  {f}
-                </label>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {([
-                ['furnished', 'Furnished'],
-                ['hapAccepted', 'HAP Accepted'],
-                ['petsAllowed', 'Pets Allowed'],
-                ['parking', 'Parking'],
-              ] as const).map(([key, label]) => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer bg-gray-50 rounded-lg px-3 py-2.5">
-                  <input type="checkbox" checked={form[key] as boolean}
-                    onChange={(e) => set(key, e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-gaff-teal focus:ring-gaff-teal" />
-                  <span className="text-sm font-medium text-gray-700">{label}</span>
-                </label>
-              ))}
             </div>
 
             <div className="mt-4">
               <label className={labelClass}>Available From</label>
-              <input type="date" value={form.availableFrom} onChange={(e) => set('availableFrom', e.target.value)}
-                className={inputClass} />
+              <input
+                type="date"
+                value={availableFrom}
+                onChange={e => setAvailableFrom(e.target.value)}
+                className={inputClass()}
+              />
             </div>
           </section>
 
-          {/* Images */}
+          {/* ── Section 3: Address ─────────────────────────────── */}
           <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gaff-slate mb-4">Images</h2>
-            <p className="text-sm text-gray-500 mb-3">Add up to 5 image URLs. The first will be the cover photo.</p>
-            <div className="space-y-3">
-              {form.images.map((img, i) => (
-                <input key={i} value={img} onChange={(e) => setImage(i, e.target.value)}
-                  placeholder={`Image URL ${i + 1}${i === 0 ? ' (cover photo)' : ''}`} className={inputClass} />
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">3</div>
+              <h2 className={sectionTitle}>Address</h2>
+            </div>
+            <p className={sectionSubtitle}>Where is the property located?</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>Address Line 1 *</label>
+                <input
+                  value={addressLine1}
+                  onChange={e => setAddressLine1(e.target.value)}
+                  placeholder="e.g. 12 Ranelagh Road"
+                  className={inputClass('addressLine1')}
+                />
+                {errors.addressLine1 && <p className="text-xs text-red-500 mt-1">{errors.addressLine1}</p>}
+              </div>
+
+              <div>
+                <label className={labelClass}>Address Line 2</label>
+                <input
+                  value={addressLine2}
+                  onChange={e => setAddressLine2(e.target.value)}
+                  placeholder="e.g. Apt 4, Block B"
+                  className={inputClass()}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className={labelClass}>City / Town *</label>
+                  <input
+                    value={city}
+                    onChange={e => setCity(e.target.value)}
+                    placeholder="e.g. Dublin"
+                    className={inputClass('city')}
+                  />
+                  {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>County</label>
+                  <select value={county} onChange={e => setCounty(e.target.value)} className={selectClass()}>
+                    {COUNTIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Eircode</label>
+                  <input
+                    value={eircode}
+                    onChange={e => setEircode(e.target.value)}
+                    placeholder="D06 F2X0"
+                    maxLength={8}
+                    className={inputClass('eircode')}
+                  />
+                  {errors.eircode && <p className="text-xs text-red-500 mt-1">{errors.eircode}</p>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Section 4: Pricing ─────────────────────────────── */}
+          <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">4</div>
+              <h2 className={sectionTitle}>Pricing</h2>
+            </div>
+            <p className={sectionSubtitle}>Set your asking price.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Price (€) *</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">€</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
+                    placeholder={listingType === 'SALE' ? '350000' : '2000'}
+                    className={`${inputClass('price')} pl-8`}
+                  />
+                </div>
+                {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
+              </div>
+
+              {(listingType === 'RENT' || listingType === 'SHARE') && (
+                <div>
+                  <label className={labelClass}>Price Frequency</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'month', label: 'Per Month' },
+                      { value: 'week', label: 'Per Week' },
+                    ].map(f => (
+                      <button
+                        key={f.value}
+                        type="button"
+                        onClick={() => setPriceFrequency(f.value)}
+                        className={`py-2.5 rounded-lg text-sm font-medium border transition-all ${priceFrequency === f.value
+                          ? 'bg-gaff-teal text-white border-gaff-teal shadow-sm'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gaff-teal/40'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* ── Section 5: Features ────────────────────────────── */}
+          <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">5</div>
+              <h2 className={sectionTitle}>Features & Amenities</h2>
+            </div>
+            <p className={sectionSubtitle}>Select all that apply.</p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {FEATURES.map(f => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => toggleFeature(f.key)}
+                  className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-medium transition-all text-left ${featureFlags[f.key]
+                    ? 'bg-gaff-teal/5 border-gaff-teal text-gaff-teal shadow-sm'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-lg">{f.icon}</span>
+                  <span>{f.label}</span>
+                  {featureFlags[f.key] && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="ml-auto shrink-0"><path d="M20 6L9 17l-5-5" /></svg>
+                  )}
+                </button>
               ))}
             </div>
           </section>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gaff-teal text-white py-3 rounded-lg font-semibold text-lg hover:bg-gaff-teal-dark transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Publishing...' : '🏠 Publish Listing — Free'}
-          </button>
+          {/* ── Section 6: Photos ──────────────────────────────── */}
+          <section className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-gaff-teal/10 rounded-lg flex items-center justify-center text-gaff-teal font-bold text-sm">6</div>
+              <h2 className={sectionTitle}>Photos</h2>
+            </div>
+            <p className={sectionSubtitle}>Add up to 10 photos. The first photo will be the cover image. Drag to reorder.</p>
+
+            {/* Photo previews */}
+            {photos.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                {photos.map((photo, i) => (
+                  <div key={photo.id} className="relative group aspect-[4/3] rounded-xl overflow-hidden border border-gray-200">
+                    <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                    {i === 0 && (
+                      <span className="absolute top-2 left-2 bg-gaff-teal text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Cover</span>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                      {i > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(photo.id, -1)}
+                          className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(photo.id)}
+                        className="w-7 h-7 bg-red-500/90 rounded-full flex items-center justify-center text-white hover:bg-red-500"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </button>
+                      {i < photos.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(photo.id, 1)}
+                          className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button */}
+            {photos.length < 10 && (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-gaff-teal/40 hover:bg-gaff-teal/5 transition-colors"
+              >
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" className="mx-auto mb-3">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+                <p className="text-sm font-medium text-gray-600">Click to add photos</p>
+                <p className="text-xs text-gray-400 mt-1">{photos.length}/10 photos · JPG, PNG, WebP</p>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handlePhotos}
+              className="hidden"
+            />
+          </section>
+
+          {/* Submit */}
+          <div className="pt-2 pb-12">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-gaff-teal text-white py-4 rounded-xl font-bold text-lg hover:bg-gaff-teal-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gaff-teal/20 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  🏠 Publish Listing
+                </>
+              )}
+            </button>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              By publishing, you confirm this listing complies with Irish rental legislation and Gaff.ie&apos;s terms of service.
+            </p>
+          </div>
         </form>
       </div>
-      
-    </>
+    </div>
   );
 }

@@ -134,9 +134,7 @@ export default function ListingCard({
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
           {verified && (
-            <span className="animate-pulse-glow rounded-full">
-              <VerifiedBadge type="landlord" size="sm" />
-            </span>
+            <VerifiedBadge type="landlord" size="sm" />
           )}
           {hapWelcome && (
             <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 gap-1">

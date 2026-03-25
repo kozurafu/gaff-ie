@@ -97,10 +97,16 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {user.role === 'TENANT' && <TenantDashboard listings={listings} />}
         {user.role === 'LANDLORD' && (
-          <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+          <>
+            <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+            <RecentEnquiries userId={user.id} />
+          </>
         )}
         {user.role === 'AGENT' && (
-          <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+          <>
+            <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
+            <RecentEnquiries userId={user.id} />
+          </>
         )}
       </div>
       
@@ -158,6 +164,18 @@ function ListingRow({ listing }: { listing: Listing }) {
 function TenantDashboard({ listings }: { listings: Listing[] }) {
   return (
     <>
+
+      <a href="/dashboard/preferences" className="block bg-gradient-to-r from-[#0C9B8A]/10 to-[#0C9B8A]/5 rounded-2xl border border-[#0C9B8A]/20 p-5 mb-8 hover:border-[#0C9B8A]/40 transition-colors group">
+        <div className="flex items-center gap-4">
+          <span className="text-3xl">🏡</span>
+          <div className="flex-1">
+            <h3 className="font-bold text-[#1a1a2e] group-hover:text-[#0C9B8A]">My Ideal Gaff</h3>
+            <p className="text-sm text-gray-500">Set your preferences and we&apos;ll match you with the perfect property.</p>
+          </div>
+          <span className="text-[#0C9B8A] text-xl">→</span>
+        </div>
+      </a>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard icon="❤️" label="Saved Properties" value={listings.length} />
         <StatCard icon="🔍" label="Saved Searches" value={0} />
@@ -214,6 +232,136 @@ function LandlordDashboard({ listings, activeCount, totalViews }: { listings: Li
         </div>
       )}
     </>
+  );
+}
+
+interface ConvMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  sender: { id: string; name: string };
+  createdAt: string;
+  readAt?: string;
+}
+
+interface ConvParticipant {
+  userId: string;
+  user: { id: string; name: string; avatar?: string };
+}
+
+interface DashConversation {
+  id: string;
+  listing?: { id: string; title: string } | null;
+  participants: ConvParticipant[];
+  messages: ConvMessage[];
+  updatedAt: string;
+}
+
+function RecentEnquiries({ userId }: { userId: string }) {
+  const [convs, setConvs] = useState<DashConversation[]>([]);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [replying, setReplying] = useState<string | null>(null);
+  const [replyOpen, setReplyOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/messages')
+      .then(r => r.ok ? r.json() : { conversations: [] })
+      .then(d => setConvs((d.conversations ?? []).slice(0, 5)))
+      .catch(() => {});
+  }, []);
+
+  const handleReply = async (convId: string) => {
+    const text = replyText[convId]?.trim();
+    if (!text) return;
+    setReplying(convId);
+    try {
+      const r = await fetch(`/api/messages/${convId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (r.ok) {
+        setReplyText(prev => ({ ...prev, [convId]: '' }));
+        setReplyOpen(null);
+        // Refresh
+        const cr = await fetch('/api/messages');
+        if (cr.ok) {
+          const d = await cr.json();
+          setConvs((d.conversations ?? []).slice(0, 5));
+        }
+      }
+    } catch { /* ignore */ }
+    setReplying(null);
+  };
+
+  if (convs.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-gaff-slate">Recent Enquiries</h2>
+        <a href="/messages" className="text-sm font-medium text-gaff-teal hover:underline">View all →</a>
+      </div>
+      <div className="space-y-3">
+        {convs.map(conv => {
+          const other = conv.participants.find(p => p.userId !== userId)?.user;
+          const last = conv.messages[0];
+          const unread = last && last.senderId !== userId && !last.readAt;
+
+          return (
+            <div key={conv.id} className={`bg-white rounded-xl border p-4 shadow-sm ${unread ? 'border-gaff-teal/30' : 'border-gray-100'}`}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gaff-teal to-gaff-teal-dark text-white font-semibold text-sm flex items-center justify-center shrink-0">
+                  {other?.name?.charAt(0)?.toUpperCase() ?? '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm ${unread ? 'font-bold' : 'font-medium'} text-gaff-slate`}>{other?.name ?? 'Unknown'}</span>
+                      {unread && <span className="w-2 h-2 bg-gaff-teal rounded-full" />}
+                    </div>
+                    <span className="text-xs text-gray-400">{last ? new Date(last.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : ''}</span>
+                  </div>
+                  {conv.listing && <p className="text-xs text-gaff-teal">{conv.listing.title}</p>}
+                  <p className="text-xs text-gray-500 mt-0.5 truncate">{last?.text ?? ''}</p>
+
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => setReplyOpen(replyOpen === conv.id ? null : conv.id)}
+                      className="text-xs font-medium text-gaff-teal hover:underline"
+                    >
+                      Quick Reply
+                    </button>
+                    <a href="/messages" className="text-xs font-medium text-gray-400 hover:text-gaff-slate">
+                      Open Chat
+                    </a>
+                  </div>
+
+                  {replyOpen === conv.id && (
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={replyText[conv.id] ?? ''}
+                        onChange={e => setReplyText(prev => ({ ...prev, [conv.id]: e.target.value }))}
+                        onKeyDown={e => { if (e.key === 'Enter') handleReply(conv.id); }}
+                        placeholder="Type a reply..."
+                        className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gaff-teal/30"
+                      />
+                      <button
+                        onClick={() => handleReply(conv.id)}
+                        disabled={replying === conv.id}
+                        className="bg-gaff-teal text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-gaff-teal-dark disabled:opacity-50"
+                      >
+                        {replying === conv.id ? '...' : 'Send'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
