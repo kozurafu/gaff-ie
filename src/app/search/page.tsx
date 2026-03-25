@@ -70,12 +70,12 @@ function SearchPageInner() {
   const fetchListings = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (location && location !== 'All Ireland') params.set('location', location);
+    if (location && location !== 'All Ireland') params.set('city', location);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
     if (bedrooms !== 'Any') params.set('bedrooms', bedrooms);
-    if (propertyType !== 'Any') params.set('propertyType', propertyType);
-    if (listingType) params.set('listingType', listingType);
+    if (propertyType !== 'Any') params.set('propertyType', propertyType.toUpperCase().replace(' ', '_'));
+    if (listingType) params.set('listingType', listingType.toUpperCase());
     if (hapAccepted) params.set('hapAccepted', 'true');
     if (petsAllowed) params.set('petsAllowed', 'true');
     params.set('page', String(page));
@@ -246,15 +246,15 @@ function SearchPageInner() {
               {listings.map((l) => (
                 <a key={l.id} href={`/listing/${l.id}`} className="block">
                   <ListingCard
-                    image={l.images?.[0] ?? '/placeholder-1.jpg'}
+                    image={typeof l.images?.[0] === 'string' ? l.images[0] : (l.images?.[0] as unknown as {url:string})?.url ?? ''}
                     price={l.price}
                     bedrooms={l.bedrooms}
                     bathrooms={l.bathrooms}
                     sqft={l.sqft}
-                    address={l.address}
-                    area={l.area}
-                    verified={l.verified}
-                    hapWelcome={l.hapWelcome}
+                    address={l.address || (l as unknown as {addressLine1:string}).addressLine1 || ''}
+                    area={l.area || (l as unknown as {city:string,county:string}).city || ''}
+                    verified={l.verified ?? true}
+                    hapWelcome={l.hapWelcome ?? (l as unknown as {hapAccepted:boolean}).hapAccepted}
                     timeAgo={l.createdAt ? timeAgo(l.createdAt) : 'Recently'}
                     propertyType={l.propertyType}
                   />
