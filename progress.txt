@@ -52,3 +52,12 @@
 - Desktop dropdown also uses role-aware dashboard label
 - Build passes ✅
 ---
+
+## 2026-03-25 — T-003: User profile page with edit mode (Ralph)
+- Created src/app/api/users/[id]/profile/route.ts — GET returns full user profile (name, role, avatar, verifications, listings, reviews, tenant preferences), PUT updates name/phone/bio/avatar with auth check
+- Created src/app/user/[id]/page.tsx — public profile page with role-appropriate content: trust score + breakdown, verification badges, bio, company info (landlord), tenant preferences summary, active listings grid
+- Created src/app/dashboard/profile/page.tsx — edit form for name, phone, bio, avatar URL with toast notifications, links to public profile
+- All roles supported: tenants show preferences summary, landlords/agents show active listings
+- "Edit profile" link shown on own profile page
+- Build passes ✅
+---

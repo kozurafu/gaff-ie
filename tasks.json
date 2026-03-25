@@ -69,7 +69,7 @@
         "src/lib/trustScore.ts"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
