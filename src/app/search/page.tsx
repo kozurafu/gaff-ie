@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ListingCard from '@/components/ui/ListingCard';
 
 const LOCATIONS = ['All Ireland', 'Dublin', 'Cork', 'Galway', 'Limerick', 'Waterford', 'Belfast', 'Kilkenny', 'Drogheda'];
@@ -13,8 +13,8 @@ const BER_OPTIONS = ['Any', 'A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'
 const FURNISHED_OPTIONS = ['Any', 'YES', 'NO', 'OPTIONAL'];
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'price_asc', label: 'Price: low to high' },
+  { value: 'price_desc', label: 'Price: high to low' },
 ];
 
 interface Listing {
@@ -38,7 +38,7 @@ interface ApiResponse {
   listings: Listing[];
   total: number;
   page: number;
-  totalPages: number;
+  pages: number;
 }
 
 export default function SearchPage() {
@@ -51,23 +51,25 @@ export default function SearchPage() {
 
 function SearchPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
+  // Initialize all state from URL params
   const [location, setLocation] = useState(searchParams.get('location') || 'Dublin');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
   const [bedrooms, setBedrooms] = useState(searchParams.get('bedrooms') || 'Any');
-  const [propertyType, setPropertyType] = useState(searchParams.get('type') || 'Any');
+  const [propertyType, setPropertyType] = useState(searchParams.get('propertyType') || 'Any');
   const [listingType, setListingType] = useState(searchParams.get('listingType') || 'rent');
-  const [hapAccepted, setHapAccepted] = useState(false);
-  const [petsAllowed, setPetsAllowed] = useState(false);
-  const [parking, setParking] = useState(false);
-  const [furnished, setFurnished] = useState('Any');
-  const [berRating, setBerRating] = useState('Any');
-  const [sortBy, setSortBy] = useState('newest');
+  const [hapAccepted, setHapAccepted] = useState(searchParams.get('hapAccepted') === 'true');
+  const [petsAllowed, setPetsAllowed] = useState(searchParams.get('petsAllowed') === 'true');
+  const [parking, setParking] = useState(searchParams.get('parking') === 'true');
+  const [furnished, setFurnished] = useState(searchParams.get('furnished') || 'Any');
+  const [berRating, setBerRating] = useState(searchParams.get('berRating') || 'Any');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'));
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [moreFilters, setMoreFilters] = useState(false);
@@ -75,6 +77,40 @@ function SearchPageInner() {
   const [saveSearchName, setSaveSearchName] = useState('');
   const [saveSearchDone, setSaveSearchDone] = useState(false);
   const [savingSearch, setSavingSearch] = useState(false);
+
+  // Sync state to URL params
+  const syncUrl = useCallback(() => {
+    const params = new URLSearchParams();
+    if (location && location !== 'Dublin') params.set('location', location);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    if (bedrooms !== 'Any') params.set('bedrooms', bedrooms);
+    if (propertyType !== 'Any') params.set('propertyType', propertyType);
+    if (listingType !== 'rent') params.set('listingType', listingType);
+    if (hapAccepted) params.set('hapAccepted', 'true');
+    if (petsAllowed) params.set('petsAllowed', 'true');
+    if (parking) params.set('parking', 'true');
+    if (furnished !== 'Any') params.set('furnished', furnished);
+    if (berRating !== 'Any') params.set('berRating', berRating);
+    if (sortBy !== 'newest') params.set('sort', sortBy);
+    if (page > 1) params.set('page', String(page));
+
+    const qs = params.toString();
+    const newUrl = qs ? `/search?${qs}` : '/search';
+    router.replace(newUrl, { scroll: false });
+  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page, router]);
+
+  // Sync URL whenever filters change
+  useEffect(() => {
+    syncUrl();
+  }, [syncUrl]);
+
+  // Restore expanded filters section if any advanced filter is active
+  useEffect(() => {
+    if (hapAccepted || petsAllowed || parking || furnished !== 'Any' || berRating !== 'Any') {
+      setMoreFilters(true);
+    }
+  }, []);
 
   const handleSaveSearch = async () => {
     if (!saveSearchName.trim() || savingSearch) return;
@@ -117,6 +153,7 @@ function SearchPageInner() {
     if (parking) params.set('parking', 'true');
     if (furnished !== 'Any') params.set('furnished', furnished);
     if (berRating !== 'Any') params.set('berRating', berRating);
+    if (sortBy !== 'newest') params.set('sort', sortBy);
     params.set('page', String(page));
 
     try {
@@ -124,7 +161,7 @@ function SearchPageInner() {
       if (res.ok) {
         const data: ApiResponse = await res.json();
         setListings(data.listings ?? []);
-        setTotalPages(data.totalPages ?? 1);
+        setTotalPages(data.pages ?? 1);
         setTotal(data.total ?? 0);
       } else {
         setListings([]);
@@ -134,7 +171,7 @@ function SearchPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, page]);
+  }, [location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sortBy, page]);
 
   useEffect(() => {
     fetchListings();
@@ -145,7 +182,7 @@ function SearchPageInner() {
 
   return (
     <div className="min-h-screen bg-gaff-warm">
-      {/* Listing type tabs — Daft style */}
+      {/* Listing type tabs */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-6 h-12">
@@ -169,7 +206,7 @@ function SearchPageInner() {
         </div>
       </div>
 
-      {/* Filter bar — Daft style horizontal */}
+      {/* Filter bar */}
       <div className="bg-white border-b border-gray-100 sticky top-[60px] z-30">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -217,7 +254,7 @@ function SearchPageInner() {
             </button>
 
             <div className="ml-auto hidden sm:block">
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectClass} w-44`}>
+              <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(1); }} className={`${selectClass} w-44`}>
                 {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
@@ -272,7 +309,6 @@ function SearchPageInner() {
 
       {/* Results */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Result count */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <p className="text-sm text-gray-500">
@@ -323,7 +359,7 @@ function SearchPageInner() {
             )}
           </div>
           <div className="sm:hidden">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectClass} text-xs`}>
+            <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(1); }} className={`${selectClass} text-xs`}>
               {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>

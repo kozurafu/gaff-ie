@@ -61,3 +61,12 @@
 - "Edit profile" link shown on own profile page
 - Build passes ✅
 ---
+
+## 2026-03-25 — T-004: Search sort and URL state persistence (Ralph)
+- Updated src/app/api/listings/route.ts: API now accepts ?sort=newest|price_asc|price_desc, orders results accordingly
+- Rewrote src/app/search/page.tsx: all filter state syncs to URL params via router.replace()
+- All filters (location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sort, page) read from URL on load
+- Sort values changed from 'price-asc'/'price-desc' to 'price_asc'/'price_desc' to match API convention
+- Browser back/forward restores previous search state (using replace, not push, to avoid excessive history entries)
+- More filters section auto-expands if any advanced filter is active from URL
+- Build passes ✅

@@ -88,7 +88,7 @@
         "src/app/api/listings/route.ts"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

@@ -46,6 +46,11 @@ export async function GET(request: NextRequest) {
     if (furnished === "YES" || furnished === "OPTIONAL") where.furnished = furnished as Prisma.EnumFurnishedStatusFilter["equals"];
     if (berRating) where.berRating = berRating;
 
+    const sort = searchParams.get("sort");
+    let orderBy: Prisma.ListingOrderByWithRelationInput = { createdAt: "desc" };
+    if (sort === "price_asc") orderBy = { price: "asc" };
+    else if (sort === "price_desc") orderBy = { price: "desc" };
+
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
         where,
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
           images: { orderBy: { order: "asc" } },
           user: { select: { id: true, name: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),
