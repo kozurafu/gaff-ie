@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Footer from '@/components/ui/Footer';
 
 type Role = 'TENANT' | 'LANDLORD' | 'AGENT';
 
@@ -124,7 +123,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </>
   );
 }

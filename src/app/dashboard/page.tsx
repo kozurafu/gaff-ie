@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Footer from '@/components/ui/Footer';
 
 type UserRole = 'TENANT' | 'LANDLORD' | 'AGENT' | 'ADMIN';
 
@@ -104,7 +103,7 @@ export default function DashboardPage() {
           <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} />
         )}
       </div>
-      <Footer />
+      
     </>
   );
 }

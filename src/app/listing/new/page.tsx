@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Footer from '@/components/ui/Footer';
+import { useState, useEffect } from 'react';
 
 const PROPERTY_TYPES = ['Apartment', 'House', 'Studio', 'Room Share', 'Duplex', 'Bungalow', 'Penthouse'];
 const LISTING_TYPES = ['rent', 'sale', 'share'];
@@ -12,6 +11,27 @@ const FEATURES = [
 ];
 
 export default function NewListingPage() {
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.user) {
+          window.location.href = '/auth/login';
+          return;
+        }
+        if (data.user.role === 'TENANT') {
+          window.location.href = '/search';
+          return;
+        }
+        setAuthorized(true);
+        setAuthChecked(true);
+      })
+      .catch(() => { window.location.href = '/auth/login'; });
+  }, []);
+
   const [form, setForm] = useState({
     title: '', description: '', propertyType: 'Apartment', listingType: 'rent',
     price: '', bedrooms: '1', bathrooms: '1', sqft: '', address: '', eircode: '',
@@ -92,6 +112,10 @@ export default function NewListingPage() {
     'w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/40 focus:border-gaff-teal';
   const selectClass = `${inputClass} appearance-none`;
   const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
+
+  if (!authChecked || !authorized) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>;
+  }
 
   return (
     <>
@@ -253,7 +277,7 @@ export default function NewListingPage() {
           </button>
         </form>
       </div>
-      <Footer />
+      
     </>
   );
 }

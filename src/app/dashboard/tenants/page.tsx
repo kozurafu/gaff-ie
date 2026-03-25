@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Footer from '@/components/ui/Footer';
 
 interface User {
   id: string;
@@ -70,7 +69,7 @@ export default function AgentTenantsPage() {
           </ul>
         </div>
       </div>
-      <Footer />
+      
     </>
   );
 }

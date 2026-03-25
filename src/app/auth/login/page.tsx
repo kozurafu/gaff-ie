@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Footer from '@/components/ui/Footer';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -102,7 +101,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </>
   );
 }
