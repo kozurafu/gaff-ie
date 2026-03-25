@@ -217,7 +217,7 @@
         "prisma/schema.prisma"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "AgentMail API: POST https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send, Bearer am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce"
     },
     {

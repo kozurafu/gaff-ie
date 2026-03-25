@@ -119,3 +119,13 @@
 - Query state persists in URL (shareable/bookmarkable) and restores on page load
 - Used `contains`+`insensitive` instead of raw SQL tsvector for simplicity and Prisma compatibility — works well for keyword matching
 - Build passes ✅
+
+## 2026-03-25 — T-010: Email notifications for new matching listings (Ralph)
+- Created src/lib/listingNotifications.ts: self-contained module with match scoring (duplicated from matching.ts to avoid server component import issues) and AgentMail email sending
+- notifyMatchingTenants() is fire-and-forget — called after listing creation, doesn't block response
+- Finds all tenants with alertFrequency='instant' and emailAlerts=true, calculates match score, sends email if >= 70%
+- Rate limited to max 10 emails per new listing to prevent spam
+- Only notifies for ACTIVE listings (skips auto-flagged/DRAFT from scam detection)
+- Email includes: title, price, city, bedrooms, match %, link to listing, HTML + plain text versions
+- Updated src/app/api/listings/route.ts: imports and calls notifyMatchingTenants after scam detection
+- Build passes ✅

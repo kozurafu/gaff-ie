@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
 import { analyzeListingForScams, calculateRiskScore } from "@/lib/scamDetection";
+import { notifyMatchingTenants } from "@/lib/listingNotifications";
 
 export async function GET(request: NextRequest) {
   try {
@@ -159,6 +160,25 @@ export async function POST(request: NextRequest) {
       // Medium risk: keep ACTIVE but flag for review
       riskAction = 'warning';
       await prisma.$executeRaw`INSERT INTO flagged_listings (id, "listingId", "riskScore", flags, status, "createdAt") VALUES (${`fl_${listing.id}`}, ${listing.id}, ${riskScore}, ${JSON.stringify(flags)}::jsonb, 'PENDING', NOW())`;
+    }
+
+    // Notify matching tenants (fire-and-forget, only for active listings)
+    if (riskAction === 'clear' || riskAction === 'warning') {
+      notifyMatchingTenants({
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        city: listing.city,
+        county: listing.county,
+        bedrooms: listing.bedrooms,
+        propertyType: listing.propertyType,
+        listingType: listing.listingType,
+        petsAllowed: listing.petsAllowed,
+        hapAccepted: listing.hapAccepted,
+        parkingIncluded: listing.parkingIncluded,
+        furnished: listing.furnished,
+        availableFrom: listing.availableFrom,
+      }).catch(() => {}); // fire-and-forget
     }
 
     return NextResponse.json({
