@@ -170,3 +170,12 @@
 - Updated src/app/auth/login/page.tsx: added "Forgot password?" link below password field.
 - Token format: base64url of "reset:userId:expiry:hmacSig" — uses "reset:" prefix to avoid collision with email verification tokens.
 - Build passes ✅
+
+## 2026-03-26 — T-015: Listing analytics and view tracking (Ralph)
+- Updated src/app/api/listings/[id]/route.ts: GET now deduplicates view counts using a `gaff-views` httpOnly cookie
+- Cookie stores JSON map of {listingId: timestamp}, only increments viewCount if listing not viewed within past hour
+- Stale entries (>1h) cleaned from cookie on each request to keep it small
+- Cookie: httpOnly, secure=false (HTTP site), sameSite=lax, maxAge=3600, path=/
+- If no recent view: uses prisma.listing.update with increment; if recent: uses findUnique (no increment)
+- View count already displayed on listing detail page (Property Details section) and dashboard listing rows — no changes needed
+- Build passes ✅

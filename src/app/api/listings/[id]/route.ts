@@ -4,18 +4,70 @@ import { getCurrentUser } from "@/lib/auth";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const listing = await prisma.listing.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } },
-      include: {
-        images: { orderBy: { order: "asc" } },
-        user: { select: { id: true, name: true, avatar: true, role: true, createdAt: true } },
-      },
+
+    // Dedup view counting: check cookie for recent views (1-hour window)
+    let shouldIncrement = true;
+    const viewsCookie = request.cookies.get("gaff-views")?.value;
+    let viewsMap: Record<string, number> = {};
+    if (viewsCookie) {
+      try {
+        viewsMap = JSON.parse(viewsCookie);
+        const lastViewed = viewsMap[id];
+        if (lastViewed && Date.now() - lastViewed < 3600000) {
+          shouldIncrement = false;
+        }
+      } catch {
+        viewsMap = {};
+      }
+    }
+
+    let listing;
+    if (shouldIncrement) {
+      listing = await prisma.listing.update({
+        where: { id },
+        data: { viewCount: { increment: 1 } },
+        include: {
+          images: { orderBy: { order: "asc" } },
+          user: { select: { id: true, name: true, avatar: true, role: true, createdAt: true } },
+        },
+      });
+    } else {
+      listing = await prisma.listing.findUnique({
+        where: { id },
+        include: {
+          images: { orderBy: { order: "asc" } },
+          user: { select: { id: true, name: true, avatar: true, role: true, createdAt: true } },
+        },
+      });
+      if (!listing) {
+        return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+      }
+    }
+
+    const response = NextResponse.json({ listing });
+
+    // Update views cookie — record this listing as viewed now
+    // Clean out entries older than 1 hour to keep cookie small
+    const now = Date.now();
+    const cleanedViews: Record<string, number> = {};
+    for (const [key, ts] of Object.entries(viewsMap)) {
+      if (now - ts < 3600000) {
+        cleanedViews[key] = ts;
+      }
+    }
+    cleanedViews[id] = now;
+    response.cookies.set("gaff-views", JSON.stringify(cleanedViews), {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 3600,
+      path: "/",
     });
-    return NextResponse.json({ listing });
+
+    return response;
   } catch {
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
