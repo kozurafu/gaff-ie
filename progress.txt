@@ -161,3 +161,12 @@
 - Time-ago formatting for activity feed items
 - Loading skeleton with animated pulse
 - Build passes ✅
+
+## 2026-03-26 — T-014: Password reset flow (Ralph)
+- Created src/app/api/auth/forgot-password/route.ts: POST accepts email, generates HMAC-signed reset token (1h expiry), sends email via AgentMail. Returns generic message to prevent email enumeration.
+- Created src/app/api/auth/reset-password/route.ts: POST validates token (reset: prefix to distinguish from email verify tokens), hashes new password with bcrypt, updates user.
+- Created src/app/auth/forgot-password/page.tsx: email input form, success state with email confirmation message.
+- Created src/app/auth/reset-password/page.tsx: token from URL params, new password + confirm form, client-side validation (min 8 chars, match check), success state with login link. Wrapped in Suspense for useSearchParams.
+- Updated src/app/auth/login/page.tsx: added "Forgot password?" link below password field.
+- Token format: base64url of "reset:userId:expiry:hmacSig" — uses "reset:" prefix to avoid collision with email verification tokens.
+- Build passes ✅

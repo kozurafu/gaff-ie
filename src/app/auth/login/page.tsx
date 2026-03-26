@@ -72,6 +72,11 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   className={inputClass}
                 />
+                <div className="text-right mt-1">
+                  <a href="/auth/forgot-password" className="text-xs text-gaff-teal hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
               </div>
               <button
                 type="submit"

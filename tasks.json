@@ -299,7 +299,7 @@
         "src/app/auth/login/page.tsx"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Follow same HMAC pattern as email verification. Use AgentMail API for sending."
     },
     {
