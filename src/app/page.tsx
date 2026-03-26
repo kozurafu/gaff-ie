@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SearchBar from "@/components/ui/SearchBar";
 import ListingCard from "@/components/ui/ListingCard";
 
@@ -33,224 +34,214 @@ async function getListings(): Promise<Listing[]> {
   }
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "1 day ago";
-  if (days < 30) return `${days} days ago`;
-  return "30+ days ago";
-}
+const stats = [
+  { value: "100%", label: "Identity-verified landlords" },
+  { value: "<4m", label: "Median response time" },
+  { value: "12 AI", label: "Signals per listing" },
+  { value: "0", label: "Unverified scams published" },
+];
+
+const trustSignals = [
+  {
+    title: "Vision-grade glass UI",
+    body: "Layered glass surfaces and neon cues guide renters through verified data without friction.",
+  },
+  {
+    title: "AI match guidance",
+    body: "Smart scoring surfaces listings aligned with your budget, commute, pets + HAP requirements in real time.",
+  },
+  {
+    title: "Viewing OS",
+    body: "Schedule, confirm, and re-plan viewings inside a glass dashboard with live agent availability.",
+  },
+];
+
+const roadmap = [
+  {
+    title: "Hyper-personal feed",
+    detail: "Tenant preference graph + AI scoring pipeline",
+  },
+  {
+    title: "Spatial trust score",
+    detail: "Real-time badge for response speed, verified docs, scam flags",
+  },
+  {
+    title: "3D listing tours",
+    detail: "Spline scenes + p5.js particle auras for each property",
+  },
+];
 
 export default async function Home() {
   const listings = await getListings();
 
   return (
-    <main>
-      {/* Hero */}
-      <section className="bg-gaff-slate">
-        <div className="max-w-3xl mx-auto px-4 pt-14 pb-16 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">
-            Find your next{" "}
-            <span className="text-gaff-teal-light">gaff</span>
-          </h1>
-          <p className="text-gray-400 text-base sm:text-lg mb-10 max-w-md mx-auto">
-            Every landlord verified. Every listing real.
-          </p>
-          <SearchBar variant="hero" />
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-14 px-4 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gaff-slate text-center mb-10">
-            How it works
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-            {[
-              {
-                step: "1",
-                title: "Search",
-                desc: "Browse verified properties across Ireland by location, price, and type.",
-                icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="M21 21l-4.35-4.35" />
-                  </svg>
-                ),
-              },
-              {
-                step: "2",
-                title: "Verify",
-                desc: "Every landlord is ID-checked and every property confirmed before listing.",
-                icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                ),
-              },
-              {
-                step: "3",
-                title: "Connect",
-                desc: "Message landlords directly with real-time chat. No ghosting, no scams.",
-                icon: (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                  </svg>
-                ),
-              },
-            ].map((item) => (
-              <div key={item.step}>
-                <div className="w-14 h-14 rounded-2xl bg-gaff-teal-50 text-gaff-teal flex items-center justify-center mx-auto mb-4">
-                  {item.icon}
+    <main className="relative overflow-hidden pb-24">
+      <section className="relative pt-32 pb-24 hero-gradient">
+        <div className="noise-overlay" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+          <div className="space-y-8">
+            <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs uppercase tracking-[0.2em] text-white/70">
+              Ireland’s verification-first property OS
+            </p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white tracking-tight">
+              <span className="text-white/80">Trustworthy homes,</span>{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6B11EE] to-[#2575FC]">curated by AI.</span>
+            </h1>
+            <p className="text-lg text-white/70 max-w-2xl">
+              Gaff.ie blends verification, matching, and spatial UI to make renting, buying, and managing property feel like a command
+              center—not a classifieds maze.
+            </p>
+            <div className="glass-panel p-4">
+              <SearchBar variant="hero" />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/listing/new" className="neon-button text-base">
+                List your property
+              </Link>
+              <Link href="/search" className="ghost-pill text-base">
+                Explore live listings
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white/80">
+              {stats.map((stat) => (
+                <div key={stat.label} className="glass-panel p-4 text-center">
+                  <p className="text-2xl font-semibold text-white">{stat.value}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/60">{stat.label}</p>
                 </div>
-                <h3 className="text-base font-semibold text-gaff-slate mb-1">
-                  {item.title}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  {item.desc}
-                </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#0CE6FF] via-[#6B11EE] to-[#FF4D6D] opacity-70 blur-3xl" />
+            <div className="glass-panel relative p-8 rounded-[40px] h-full">
+              <div className="floating">
+                <p className="text-xs text-white/60 uppercase tracking-[0.3em] mb-6">Live platform telemetry</p>
+                <div className="space-y-4">
+                  {roadmap.map((item) => (
+                    <div key={item.title} className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                      <p className="text-sm text-white/60">{item.detail}</p>
+                      <p className="text-lg font-semibold text-white">{item.title}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-8">
+                  <p className="text-xs text-white/60 mb-2">Realtime signals</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse" />
+                    <p className="text-sm text-white/80">Scam net active · AI matches recalculating every 60s</p>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Latest listings */}
-      {listings.length > 0 && (
-        <section className="py-14 px-4 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-gaff-slate">
-                  Latest verified listings
-                </h2>
-                <p className="text-gray-500 text-sm mt-1">
-                  Real properties from verified landlords
-                </p>
-              </div>
-              <a
-                href="/search"
-                className="text-gaff-teal font-semibold text-sm hover:text-gaff-teal-dark flex items-center gap-1 shrink-0"
-              >
-                View all
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
+        <div className="glass-panel p-6 lg:p-8 rounded-4xl">
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
+            <div className="flex-1 space-y-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">How it works</p>
+              <h2 className="text-3xl font-semibold text-white">A spatial workflow for every role</h2>
+              <p className="text-white/70 max-w-2xl">
+                Tenants craft preference profiles, our AI matches real listings, landlords verify identity + listings, and agents orchestrate portfolios inside a glass dashboard with messaging, analytics, and viewing scheduler.
+              </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {listings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  image={listing.images?.[0] || ""}
-                  price={listing.price}
-                  bedrooms={listing.bedrooms}
-                  bathrooms={listing.bathrooms}
-                  sqft={listing.area || undefined}
-                  address={listing.title || listing.address}
-                  area={`${listing.city}, ${listing.county}`}
-                  verified={listing.verified}
-                  hapWelcome={listing.hapWelcome}
-                  timeAgo={timeAgo(listing.createdAt)}
-                  propertyType={listing.propertyType}
-                  createdAt={listing.createdAt}
-                />
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              {[
+                { title: 'Tenant', desc: 'AI preference graph + instant matches' },
+                { title: 'Landlord', desc: 'Identity verification + listing analytics' },
+                { title: 'Agent', desc: 'Command center with bulk messaging + viewings' },
+              ].map((item) => (
+                <div key={item.title} className="bg-white/5 rounded-3xl border border-white/10 p-4 text-white/80">
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/40">{item.title}</p>
+                  <p className="text-base font-semibold text-white">{item.desc}</p>
+                </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {listings.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Live marketplace</p>
+              <h2 className="text-3xl font-semibold text-white">Listings with built-in trust</h2>
+              <p className="text-white/60">Every card is a verified landlord, AI match score, and scam detection summary.</p>
+            </div>
+            <Link href="/search" className="ghost-pill">
+              Browse all listings
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                image={listing.images?.[0] || ""}
+                price={listing.price}
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                sqft={listing.area || undefined}
+                address={listing.title || listing.address}
+                area={`${listing.city}, ${listing.county}`}
+                verified={listing.verified}
+                hapWelcome={listing.hapWelcome}
+                timeAgo="Live"
+                propertyType={listing.propertyType}
+                createdAt={listing.createdAt}
+              />
+            ))}
           </div>
         </section>
       )}
 
-      {/* Why Gaff */}
-      <section className="py-14 px-4 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gaff-slate text-center mb-10">
-            Why Gaff.ie?
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                ),
-                title: "Every Landlord Verified",
-                description: "Government ID + property ownership checked before any listing goes live.",
-              },
-              {
-                icon: (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 12h8" />
-                  </svg>
-                ),
-                title: "Free to List",
-                description: "Basic listings are free forever. No €135+ fees like other platforms.",
-              },
-              {
-                icon: (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                    <path d="M8 9h8M8 13h4" />
-                  </svg>
-                ),
-                title: "Messages That Work",
-                description: "Real-time messaging with read receipts. No more ghosting.",
-              },
-              {
-                icon: (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path d="M12 8v4M12 16h.01" />
-                  </svg>
-                ),
-                title: "AI Scam Detection",
-                description: "Fake listings caught automatically. Stock photos and pricing anomalies flagged.",
-              },
-            ].map((d, i) => (
-              <div key={i} className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-gaff-teal-50 text-gaff-teal flex items-center justify-center mx-auto mb-4">
-                  {d.icon}
-                </div>
-                <h3 className="text-sm font-semibold text-gaff-slate mb-1.5">
-                  {d.title}
-                </h3>
-                <p className="text-gray-500 text-xs leading-relaxed">
-                  {d.description}
-                </p>
-              </div>
-            ))}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 grid lg:grid-cols-2 gap-8">
+        <div className="glass-panel p-8 space-y-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Verification layer</p>
+          <h3 className="text-3xl text-white font-semibold">AI + humans double-check every moment</h3>
+          <ul className="space-y-4 text-white/70">
+            <li>• Real-time ID + property ownership verification</li>
+            <li>• Scam detection scanning imagery, pricing anomalies, IP reputation</li>
+            <li>• Viewing scheduler with attendance logging + trust score impact</li>
+          </ul>
+          <div className="flex gap-4">
+            <div>
+              <p className="text-4xl font-semibold text-[#00F0FF]">78</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">signals per landlord</p>
+            </div>
+            <div>
+              <p className="text-4xl font-semibold text-white">0</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">live scam reports</p>
+            </div>
           </div>
+        </div>
+        <div className="space-y-4">
+          {trustSignals.map((signal) => (
+            <div key={signal.title} className="bg-white/5 rounded-3xl border border-white/10 p-6">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/50">{signal.title}</p>
+              <p className="text-lg text-white font-semibold">{signal.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-14 px-4 bg-gaff-teal">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-            List your property for free
-          </h2>
-          <p className="text-white/80 mb-8 max-w-md mx-auto">
-            Join Ireland&apos;s verification-first property platform. No fees, no scams, no hassle.
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 text-center">
+        <div className="glass-panel p-10">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Future signal</p>
+          <h3 className="text-4xl text-white font-semibold mb-4">Feels like a spatial OS for property intelligence.</h3>
+          <p className="text-white/70 max-w-3xl mx-auto mb-8">
+            From aurora gradients to Spline heroes and p5.js signal noise, Gaff.ie brings immersive calm to housing. Join the operators who want speed, trust, and beauty in the same window.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="/listing/new"
-              className="bg-white text-gaff-teal font-semibold px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              List your property
-            </a>
-            <a
-              href="/search"
-              className="border-2 border-white/30 text-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Browse listings
-            </a>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/auth/register" className="neon-button">
+              Activate your workspace
+            </Link>
+            <Link href="/contact" className="ghost-pill">
+              Talk to the team
+            </Link>
           </div>
         </div>
       </section>

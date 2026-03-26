@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
+import { Suspense } from 'react';
 import './globals.css';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
 
 export const metadata: Metadata = {
   title: 'Gaff.ie — Find Your Next Gaff | Irish Property Platform',
@@ -22,8 +23,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: 'Gaff.ie — Find Your Next Gaff',
-    description:
-      'Every landlord verified. Every listing real. Free to list.',
+    description: 'Every landlord verified. Every listing real. Free to list.',
     siteName: 'Gaff.ie',
     type: 'website',
   },
@@ -31,10 +31,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="bg-warm-white text-slate-dark font-sans antialiased">
+    <html lang="en" className={spaceGrotesk.variable}>
+      <body className="font-sans text-white">
         <ToastProvider>
-          <Navbar />
+          <Suspense fallback={<div className="h-[76px]" />}>
+            <Navbar />
+          </Suspense>
           <main className="min-h-screen">{children}</main>
           <Footer />
         </ToastProvider>

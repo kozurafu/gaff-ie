@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed"
@@ -39,6 +39,8 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "devDependencies": {
+    "eslint": "^9.2.0",
+    "eslint-config-next": "^16.2.1",
     "tsx": "^4.21.0"
   }
 }
