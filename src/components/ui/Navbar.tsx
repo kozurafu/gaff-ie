@@ -105,8 +105,8 @@ export default function Navbar() {
   const activeListingType = searchParams?.get('listingType');
 
   const navStateClass = scrolled
-    ? 'bg-[rgba(6,8,16,0.85)] border border-white/5 shadow-[0_20px_60px_rgba(3,8,20,0.55)] backdrop-blur-2xl'
-    : 'bg-[rgba(6,8,16,0.55)] border border-white/5 backdrop-blur-2xl shadow-[0_25px_60px_rgba(5,6,10,0.45)]';
+    ? 'bg-white/95 border border-gray-200 shadow-[0_20px_60px_rgba(15,23,42,0.1)] backdrop-blur-2xl'
+    : 'bg-white/80 border border-gray-200 shadow-[0_25px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl';
 
   return (
     <>
@@ -121,8 +121,8 @@ export default function Navbar() {
                 </svg>
               </div>
               <div>
-                <p className="text-white font-semibold text-lg leading-4 tracking-tight">Gaff<span className="text-[#00F0FF]">.ie</span></p>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Verified Living</p>
+                <p className="text-slate-900 font-semibold text-lg leading-4 tracking-tight">Gaff<span className="text-[#0CE6FF]">.ie</span></p>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Verified Living</p>
               </div>
             </Link>
 
@@ -135,8 +135,8 @@ export default function Navbar() {
                     href={link.href}
                     className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'bg-white/20 text-white shadow-inner'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                        ? 'bg-slate-900 text-white shadow-lg'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                     }`}
                   >
                     {link.label}
@@ -149,11 +149,11 @@ export default function Navbar() {
               {!loading && user ? (
                 <>
                   {(user.role === 'LANDLORD' || user.role === 'AGENT') && (
-                    <Link href="/listing/new" className="text-white/70 hover:text-white text-sm font-medium">
+                    <Link href="/listing/new" className="text-slate-600 hover:text-slate-900 text-sm font-medium">
                       List property
                     </Link>
                   )}
-                  <Link href="/messages" className="relative p-2 rounded-2xl bg-white/5 hover:bg-white/10 text-white/80">
+                  <Link href="/messages" className="relative p-2 rounded-2xl bg-white border border-gray-200 hover:bg-gray-50 text-slate-700">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                     </svg>
@@ -166,9 +166,9 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/80 hover:border-white/30"
+                      className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border border-gray-200 bg-white text-slate-700 hover:border-gray-400"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-white/70">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-slate-500">
                         <path d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                       <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0CE6FF] to-[#6B11EE] text-white font-semibold text-sm flex items-center justify-center">
@@ -176,28 +176,28 @@ export default function Navbar() {
                       </div>
                     </button>
                     {dropdownOpen && (
-                      <div className="absolute right-0 top-14 w-64 glass-panel p-3 text-white animate-fade-in">
+                      <div className="absolute right-0 top-14 w-64 glass-panel p-3 text-slate-800 animate-fade-in">
                         <div className="flex items-center gap-3 pb-3 border-b border-white/5">
                           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#6B11EE] to-[#2575FC] text-white font-semibold flex items-center justify-center">
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold truncate">{user.name}</p>
-                            <p className="text-xs text-white/60 capitalize">{user.role.toLowerCase()}</p>
+                            <p className="text-xs text-slate-500 capitalize">{user.role.toLowerCase()}</p>
                           </div>
                         </div>
-                        <div className="mt-2 space-y-1 text-sm text-white/80">
-                          <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-white/5">
+                        <div className="mt-2 space-y-1 text-sm text-slate-700">
+                          <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-gray-50">
                             <span className="text-base">🏛️</span>
                             {dashboardLabel}
                           </Link>
-                          <Link href="/messages" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-white/5">
+                          <Link href="/messages" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-gray-50">
                             <span className="text-base">💬</span>
                             Messages
-                            {unreadCount > 0 && <span className="ml-auto text-[10px] bg-white/15 px-2 py-0.5 rounded-full">{unreadCount}</span>}
+                            {unreadCount > 0 && <span className="ml-auto text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">{unreadCount}</span>}
                           </Link>
                           {(user.role === 'LANDLORD' || user.role === 'AGENT') && (
-                            <Link href="/listing/new" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-white/5">
+                            <Link href="/listing/new" className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-gray-50">
                               <span className="text-base">➕</span>
                               Place Ad
                             </Link>
@@ -226,7 +226,7 @@ export default function Navbar() {
 
             <div className="flex md:hidden items-center gap-2">
               {!loading && user && (
-                <Link href="/messages" className="relative p-2 rounded-2xl bg-white/10 text-white">
+                <Link href="/messages" className="relative p-2 rounded-2xl bg-white border border-gray-200 text-slate-700">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                   </svg>
@@ -238,7 +238,7 @@ export default function Navbar() {
                 </Link>
               )}
               <button
-                className="p-2 rounded-2xl bg-white/10 text-white"
+                className="p-2 rounded-2xl bg-white border border-gray-200 text-slate-700"
                 onClick={() => (menuOpen ? closeMenu() : openMenu())}
                 aria-label="Toggle menu"
               >
@@ -255,7 +255,7 @@ export default function Navbar() {
         <div className="fixed inset-0 z-40 md:hidden">
           <div className={`absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity ${closing ? 'opacity-0' : 'opacity-100'}`} onClick={closeMenu} />
           <div
-            className={`absolute right-0 top-0 bottom-0 w-[300px] glass-panel rounded-none rounded-l-3xl p-6 text-white transition-transform duration-300 ease-out ${closing ? 'translate-x-full' : 'translate-x-0'}`}
+            className={`absolute right-0 top-0 bottom-0 w-[300px] glass-panel rounded-none rounded-l-3xl p-6 text-slate-800 transition-transform duration-300 ease-out ${closing ? 'translate-x-full' : 'translate-x-0'}`}
           >
             {!loading && user && (
               <div className="flex items-center gap-3 mb-5">
@@ -264,32 +264,32 @@ export default function Navbar() {
                 </div>
                 <div>
                   <p className="font-semibold">{user.name}</p>
-                  <p className="text-xs text-white/60 capitalize">{user.role.toLowerCase()}</p>
+                  <p className="text-xs text-slate-500 capitalize">{user.role.toLowerCase()}</p>
                 </div>
               </div>
             )}
             <div className="space-y-2">
               {NAV_LINKS.map((link) => (
-                <Link key={link.label} href={link.href} className="block px-4 py-3 rounded-2xl bg-white/5 text-sm font-semibold">
+                <Link key={link.label} href={link.href} className="block px-4 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-sm font-semibold">
                   {link.label}
                 </Link>
               ))}
             </div>
-            <div className="border-t border-white/10 my-5" />
+            <div className="border-t border-gray-100 my-5" />
             {!loading && user ? (
               <div className="space-y-2 text-sm">
-                <Link href="/dashboard" className="block px-4 py-3 rounded-2xl bg-white/5">
+                <Link href="/dashboard" className="block px-4 py-3 rounded-2xl bg-white border border-gray-200">
                   {dashboardLabel}
                 </Link>
-                <Link href="/messages" className="block px-4 py-3 rounded-2xl bg-white/5">
+                <Link href="/messages" className="block px-4 py-3 rounded-2xl bg-white border border-gray-200">
                   Messages
                 </Link>
                 {(user.role === 'LANDLORD' || user.role === 'AGENT') && (
-                  <Link href="/listing/new" className="block px-4 py-3 rounded-2xl bg-white/5">
+                  <Link href="/listing/new" className="block px-4 py-3 rounded-2xl bg-white border border-gray-200">
                     Place Ad
                   </Link>
                 )}
-                <button onClick={handleLogout} className="w-full px-4 py-3 rounded-2xl bg-red-500/20 text-red-200 font-semibold">
+                <button onClick={handleLogout} className="w-full px-4 py-3 rounded-2xl bg-red-50 text-red-600 font-semibold border border-red-100">
                   Sign Out
                 </button>
               </div>

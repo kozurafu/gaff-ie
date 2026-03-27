@@ -41,9 +41,9 @@ export default function VerifiedBadge({
       </svg>
       {label}
       {showTooltip && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 rounded-lg bg-slate-dark text-white text-xs font-normal p-2.5 shadow-lg z-50 text-center leading-relaxed pointer-events-none">
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 rounded-lg bg-slate-900 text-white text-xs font-normal p-2.5 shadow-lg z-50 text-center leading-relaxed pointer-events-none">
           {tooltip}
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-dark" />
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
         </span>
       )}
     </span>

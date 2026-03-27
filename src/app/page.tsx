@@ -80,14 +80,14 @@ export default async function Home() {
         <div className="noise-overlay" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-8 order-2 lg:order-1">
-            <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70">
+            <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-white text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500 shadow-sm">
               Ireland’s verification-first property OS
             </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white tracking-tight leading-tight">
-              <span className="text-white/80 block">Trustworthy homes,</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6B11EE] to-[#2575FC] block">curated by AI.</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
+              <span className="text-slate-700 block">Trustworthy homes,</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0CE6FF] via-[#6B11EE] to-[#FF7AC0] block">curated by AI.</span>
             </h1>
-            <p className="text-base sm:text-lg text-white/70 max-w-2xl">
+            <p className="text-base sm:text-lg text-slate-600 max-w-2xl">
               Gaff.ie blends verification, matching, and spatial UI to make renting, buying, and managing property feel like a command
               center—not a classifieds maze.
             </p>
@@ -102,34 +102,34 @@ export default async function Home() {
                 Explore live listings
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-white/80">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-slate-700">
               {stats.map((stat) => (
                 <div key={stat.label} className="glass-panel p-4 text-center">
-                  <p className="text-2xl font-semibold text-white">{stat.value}</p>
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/60">{stat.label}</p>
+                  <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500">{stat.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="relative order-1 lg:order-2">
-            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#0CE6FF] via-[#6B11EE] to-[#FF4D6D] opacity-60 blur-3xl" />
+            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#FFDEE9] via-[#B5FFFC] to-[#E4FBFF] opacity-80 blur-3xl" />
             <div className="glass-panel relative p-6 sm:p-8 rounded-[32px] h-full">
               <div className="floating space-y-5">
-                <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-[0.3em]">Live platform telemetry</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.3em]">Live platform telemetry</p>
                 <div className="space-y-4">
                   {roadmap.map((item) => (
-                    <div key={item.title} className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                      <p className="text-sm text-white/60">{item.detail}</p>
-                      <p className="text-lg font-semibold text-white">{item.title}</p>
+                    <div key={item.title} className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                      <p className="text-sm text-slate-500">{item.detail}</p>
+                      <p className="text-lg font-semibold text-slate-900">{item.title}</p>
                     </div>
                   ))}
                 </div>
                 <div className="pt-2">
-                  <p className="text-[10px] sm:text-xs text-white/60">Realtime signals</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">Realtime signals</p>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse" />
-                    <p className="text-sm text-white/80">Scam net active · AI matches recalculating every 60s</p>
+                    <div className="w-2 h-2 rounded-full bg-[#0CE6FF] animate-pulse" />
+                    <p className="text-sm text-slate-600">Scam net active · AI matches recalculating every 60s</p>
                   </div>
                 </div>
               </div>
@@ -142,9 +142,9 @@ export default async function Home() {
         <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-4xl">
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="flex-1 space-y-4">
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/60">How it works</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-white">A spatial workflow for every role</h2>
-              <p className="text-white/70 max-w-2xl text-sm sm:text-base">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">How it works</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">A spatial workflow for every role</h2>
+              <p className="text-slate-600 max-w-2xl text-sm sm:text-base">
                 Tenants craft preference profiles, our AI matches real listings, landlords verify identity + listings, and agents orchestrate portfolios inside a glass dashboard with messaging, analytics, and viewing scheduler.
               </p>
             </div>
@@ -154,9 +154,9 @@ export default async function Home() {
                 { title: 'Landlord', desc: 'Identity verification + listing analytics' },
                 { title: 'Agent', desc: 'Command center with bulk messaging + viewings' },
               ].map((item) => (
-                <div key={item.title} className="bg-white/5 rounded-3xl border border-white/10 p-4 text-white/80">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">{item.title}</p>
-                  <p className="text-base font-semibold text-white">{item.desc}</p>
+                <div key={item.title} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 text-slate-600">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{item.title}</p>
+                  <p className="text-base font-semibold text-slate-900">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -168,9 +168,9 @@ export default async function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
             <div>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/60">Live marketplace</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-white">Listings with built-in trust</h2>
-              <p className="text-white/60 text-sm sm:text-base">Every card is a verified landlord, AI match score, and scam detection summary.</p>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Live marketplace</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Listings with built-in trust</h2>
+              <p className="text-slate-600 text-sm sm:text-base">Every card is a verified landlord, AI match score, and scam detection summary.</p>
             </div>
             <Link href="/search" className="ghost-pill w-full sm:w-auto text-center">
               Browse all listings
@@ -200,29 +200,29 @@ export default async function Home() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 grid lg:grid-cols-2 gap-6 sm:gap-8">
         <div className="glass-panel p-6 sm:p-8 space-y-6">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/60">Verification layer</p>
-          <h3 className="text-2xl sm:text-3xl text-white font-semibold">AI + humans double-check every moment</h3>
-          <ul className="space-y-4 text-white/70 text-sm sm:text-base">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Verification layer</p>
+          <h3 className="text-2xl sm:text-3xl text-slate-900 font-semibold">AI + humans double-check every moment</h3>
+          <ul className="space-y-4 text-slate-600 text-sm sm:text-base">
             <li>• Real-time ID + property ownership verification</li>
             <li>• Scam detection scanning imagery, pricing anomalies, IP reputation</li>
             <li>• Viewing scheduler with attendance logging + trust score impact</li>
           </ul>
           <div className="flex gap-6 text-center">
             <div>
-              <p className="text-4xl font-semibold text-[#00F0FF]">78</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/60">signals per landlord</p>
+              <p className="text-4xl font-semibold text-[#0CE6FF]">78</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">signals per landlord</p>
             </div>
             <div>
-              <p className="text-4xl font-semibold text-white">0</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/60">live scam reports</p>
+              <p className="text-4xl font-semibold text-slate-900">0</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">live scam reports</p>
             </div>
           </div>
         </div>
         <div className="space-y-4">
           {trustSignals.map((signal) => (
-            <div key={signal.title} className="bg-white/5 rounded-3xl border border-white/10 p-5 sm:p-6">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/50">{signal.title}</p>
-              <p className="text-lg text-white font-semibold">{signal.body}</p>
+            <div key={signal.title} className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{signal.title}</p>
+              <p className="text-lg text-slate-800 font-semibold">{signal.body}</p>
             </div>
           ))}
         </div>
@@ -230,9 +230,9 @@ export default async function Home() {
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 text-center">
         <div className="glass-panel p-8 sm:p-10">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/60">Future signal</p>
-          <h3 className="text-3xl sm:text-4xl text-white font-semibold mb-4">Feels like a spatial OS for property intelligence.</h3>
-          <p className="text-white/70 text-sm sm:text-base max-w-3xl mx-auto mb-8">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Future signal</p>
+          <h3 className="text-3xl sm:text-4xl text-slate-900 font-semibold mb-4">Feels like a spatial OS for property intelligence.</h3>
+          <p className="text-slate-600 text-sm sm:text-base max-w-3xl mx-auto mb-8">
             From aurora gradients to Spline heroes and p5.js signal noise, Gaff.ie brings immersive calm to housing. Join the operators who want speed, trust, and beauty in the same window.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">

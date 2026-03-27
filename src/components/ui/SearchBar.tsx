@@ -74,7 +74,7 @@ export default function SearchBar({ variant = 'hero' }: { variant?: 'hero' | 'co
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
       {/* Listing type tabs */}
       <div className="flex justify-center mb-4">
-        <div className="inline-flex bg-white/10 backdrop-blur-sm rounded-lg p-1 border border-white/10">
+        <div className="inline-flex bg-white border border-gray-200 shadow-sm rounded-lg p-1">
           {LISTING_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -82,8 +82,8 @@ export default function SearchBar({ variant = 'hero' }: { variant?: 'hero' | 'co
               onClick={() => setListingType(tab.value)}
               className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
                 listingType === tab.value
-                  ? 'bg-white text-gaff-slate shadow-sm'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-slate-900 text-white shadow-lg'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               {tab.label}
@@ -119,7 +119,7 @@ export default function SearchBar({ variant = 'hero' }: { variant?: 'hero' | 'co
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="mt-3 text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 mx-auto"
+        className="mt-3 text-xs text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1 mx-auto"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="14" y2="12" /><line x1="4" y1="18" x2="8" y2="18" /></svg>
         {expanded ? 'Less filters' : 'More filters'}

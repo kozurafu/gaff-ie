@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={spaceGrotesk.variable}>
-      <body className="font-sans text-white">
+      <body className="font-sans text-slate-900">
         <ToastProvider>
           <Suspense fallback={<div className="h-[76px]" />}>
             <Navbar />
