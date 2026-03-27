@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
+
+function requireAgentMailKey(): string {
+  if (!AGENTMAIL_API_KEY) {
+    throw new Error('AGENTMAIL_API_KEY is not configured');
+  }
+  return AGENTMAIL_API_KEY;
+}
+
 export async function POST(req: NextRequest) {
   const { name, email, subject, message } = await req.json();
 
@@ -17,7 +26,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce`,
+        'Authorization': `Bearer ${requireAgentMailKey()}`,
       },
       body: JSON.stringify({
         from: 'mmclaw@agentmail.to',

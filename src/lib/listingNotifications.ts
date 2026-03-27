@@ -100,15 +100,22 @@ function calculateMatchScore(prefs: {
 }
 
 const AGENTMAIL_API = 'https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send';
-const AGENTMAIL_TOKEN = 'am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce';
+const AGENTMAIL_TOKEN = process.env.AGENTMAIL_API_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://uc0gg4wkwwg0scc44ooowgws.62.171.142.50.sslip.io';
+
+function getAgentMailToken(): string {
+  if (!AGENTMAIL_TOKEN) {
+    throw new Error('AGENTMAIL_API_KEY is not configured');
+  }
+  return AGENTMAIL_TOKEN;
+}
 
 async function sendEmailNotification(toEmail: string, toName: string, listing: ListingForMatch, matchScore: number): Promise<boolean> {
   try {
     const res = await fetch(AGENTMAIL_API, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${AGENTMAIL_TOKEN}`,
+        'Authorization': `Bearer ${getAgentMailToken()}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

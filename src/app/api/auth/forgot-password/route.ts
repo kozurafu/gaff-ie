@@ -3,9 +3,16 @@ import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 
 const HMAC_SECRET = process.env.JWT_SECRET || "gaff-production-secret-x7k9m2p4";
-const AGENTMAIL_API_KEY = "am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce";
+const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
 const FROM_ADDRESS = "mmclaw@agentmail.to";
 const BASE_URL = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
+function getAgentMailKey(): string {
+  if (!AGENTMAIL_API_KEY) {
+    throw new Error("AGENTMAIL_API_KEY is not configured");
+  }
+  return AGENTMAIL_API_KEY;
+}
 
 function generateResetToken(userId: string): string {
   const expiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour
@@ -20,7 +27,7 @@ async function sendResetEmail(email: string, token: string) {
   await fetch(`https://api.agentmail.to/v0/inboxes/${FROM_ADDRESS}/messages/send`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${AGENTMAIL_API_KEY}`,
+      Authorization: `Bearer ${getAgentMailKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

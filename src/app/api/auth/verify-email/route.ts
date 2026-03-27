@@ -4,9 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { getTokenFromRequest } from "@/lib/auth";
 
 const HMAC_SECRET = process.env.JWT_SECRET || "gaff-production-secret-x7k9m2p4";
-const AGENTMAIL_API_KEY = "am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce";
+const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
 const FROM_ADDRESS = "mmclaw@agentmail.to";
 const BASE_URL = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+
+function requireAgentMailKey(): string {
+  if (!AGENTMAIL_API_KEY) {
+    throw new Error("AGENTMAIL_API_KEY is not configured");
+  }
+  return AGENTMAIL_API_KEY;
+}
 
 function generateToken(userId: string): string {
   const expiry = Math.floor(Date.now() / 1000) + 86400; // 24h
@@ -36,7 +43,7 @@ export async function sendVerificationEmail(userId: string, email: string) {
   await fetch(`https://api.agentmail.to/v0/inboxes/${FROM_ADDRESS}/messages/send`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${AGENTMAIL_API_KEY}`,
+      Authorization: `Bearer ${requireAgentMailKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
