@@ -35,39 +35,87 @@ async function getListings(): Promise<Listing[]> {
 }
 
 const stats = [
-  { value: "100%", label: "Identity-verified landlords" },
-  { value: "<4m", label: "Median response time" },
-  { value: "12 AI", label: "Signals per listing" },
-  { value: "0", label: "Unverified scams published" },
+  { value: "€0", label: "to list your property" },
+  { value: "ID-first", label: "owner onboarding" },
+  { value: "Inbox", label: "that tracks every reply" },
+  { value: "Weekly", label: "waitlist releases" },
+];
+
+const heroHighlights = [
+  {
+    title: "Built for Ireland",
+    detail: "County-level filters, euro pricing, HAP + BER context, and listings written for Irish renters." ,
+  },
+  {
+    title: "Profiles you can trust",
+    detail: "Landlords and agents onboard with legal ID and proof of ownership, so every ad is tied to a real person.",
+  },
+  {
+    title: "One dashboard per role",
+    detail: "Renters track enquiries, landlords mark ads as let, and agents manage portfolios without spreadsheets.",
+  },
+];
+
+const workflowSteps = [
+  {
+    title: "Search & shortlist",
+    desc: "Filter by location, price, beds, pets, parking, and availability. Keep the homes you care about in one view.",
+  },
+  {
+    title: "Message inside Gaff",
+    desc: "Send enquiries without leaving the site. Every reply sits in the same thread, so nobody wonders if it was delivered.",
+  },
+  {
+    title: "See what happens next",
+    desc: "Owners mark listings as let, invite you to viewings, and share updates. No more guessing if an ad is already gone.",
+  },
 ];
 
 const trustSignals = [
   {
-    title: "Vision-grade glass UI",
-    body: "Layered glass surfaces and neon cues guide renters through verified data without friction.",
+    title: "Inbox that can’t disappear",
+    body: "Conversations live inside Gaff.ie with timestamps, so tenants and owners see the same history and nothing gets lost in email.",
   },
   {
-    title: "AI match guidance",
-    body: "Smart scoring surfaces listings aligned with your budget, commute, pets + HAP requirements in real time.",
+    title: "Listings that stay honest",
+    body: "Every ad auto-expires if it isn’t refreshed and owners must mark properties as Let when they’re done.",
   },
   {
-    title: "Viewing OS",
-    body: "Schedule, confirm, and re-plan viewings inside a glass dashboard with live agent availability.",
+    title: "Moderation with names attached",
+    body: "Report a listing or conversation and a human moderator freezes it until the docs check out. No burner accounts.",
   },
 ];
 
-const roadmap = [
+const personaStories = [
   {
-    title: "Hyper-personal feed",
-    detail: "Tenant preference graph + AI scoring pipeline",
+    role: "Renters",
+    headline: "Verified homes + a real inbox.",
+    points: [
+      "Browse only owner-backed listings instead of anonymous Gmail ads.",
+      "Send enquiries in-app and keep the whole thread — you always know who read it and when.",
+      "See when a property is marked Let so you stop chasing dead ads.",
+      "Flag anything suspicious and a moderator steps in before deposits move.",
+    ],
   },
   {
-    title: "Spatial trust score",
-    detail: "Real-time badge for response speed, verified docs, scam flags",
+    role: "Landlords",
+    headline: "List for free and respond faster.",
+    points: [
+      "Publish once, reuse it every time the tenancy renews — no €135 listing fees.",
+      "All enquiries drop into a single inbox with tenant profiles attached.",
+      "Shortlist applicants, schedule viewings, and close the ad in one click.",
+      "Upload ID + RTB details once so renters see a verified badge beside your name.",
+    ],
   },
   {
-    title: "3D listing tours",
-    detail: "Spline scenes + p5.js particle auras for each property",
+    role: "Estate agents",
+    headline: "Portfolio management without spreadsheets.",
+    points: [
+      "Manage rentals and sales from one dashboard instead of juggling Daft, email, and CRM exports.",
+      "Assign enquiries to teammates and keep landlords updated with a clear pipeline.",
+      "Mark listings Let Agreed, watch response-time stats, and prove ROI to clients.",
+      "Export your data anytime — you own your leads and history.",
+    ],
   },
 ];
 
@@ -81,15 +129,14 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-8 order-2 lg:order-1">
             <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-white text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500 shadow-sm">
-              Ireland’s verification-first property OS
+              Built in Ireland for renters, landlords & agents
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
-              <span className="text-slate-700 block">Trustworthy homes,</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0CE6FF] via-[#6B11EE] to-[#FF7AC0] block">curated by AI.</span>
+              <span className="text-slate-700 block">It’s a property app, not a classifieds board.</span>
             </h1>
             <p className="text-base sm:text-lg text-slate-600 max-w-2xl">
-              Gaff.ie blends verification, matching, and spatial UI to make renting, buying, and managing property feel like a command
-              center—not a classifieds maze.
+              Search verified homes, message owners inside Gaff.ie, and see exactly when a listing is gone. Landlords list for free and keep every reply
+              in one dashboard.
             </p>
             <div className="glass-panel p-4">
               <SearchBar variant="hero" />
@@ -115,22 +162,18 @@ export default async function Home() {
           <div className="relative order-1 lg:order-2">
             <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#FFDEE9] via-[#B5FFFC] to-[#E4FBFF] opacity-80 blur-3xl" />
             <div className="glass-panel relative p-6 sm:p-8 rounded-[32px] h-full">
-              <div className="floating space-y-5">
-                <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.3em]">Live platform telemetry</p>
+              <div className="space-y-5">
+                <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.3em]">What you get today</p>
                 <div className="space-y-4">
-                  {roadmap.map((item) => (
+                  {heroHighlights.map((item) => (
                     <div key={item.title} className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
-                      <p className="text-sm text-slate-500">{item.detail}</p>
-                      <p className="text-lg font-semibold text-slate-900">{item.title}</p>
+                      <p className="text-sm text-slate-500">{item.title}</p>
+                      <p className="text-lg font-semibold text-slate-900">{item.detail}</p>
                     </div>
                   ))}
                 </div>
-                <div className="pt-2">
-                  <p className="text-[10px] sm:text-xs text-slate-500">Realtime signals</p>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#0CE6FF] animate-pulse" />
-                    <p className="text-sm text-slate-600">Scam net active · AI matches recalculating every 60s</p>
-                  </div>
+                <div className="rounded-2xl border border-gray-100 bg-white/80 p-4 text-sm text-slate-600">
+                  Gaff.ie replaces Daft.ie + email ping-pong. Search, messaging, viewings, and moderation happen in one place.
                 </div>
               </div>
             </div>
@@ -142,21 +185,18 @@ export default async function Home() {
         <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-4xl">
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="flex-1 space-y-4">
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">How it works</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">A spatial workflow for every role</h2>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">How Gaff.ie works</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Everything from first search to keys happens here.</h2>
               <p className="text-slate-600 max-w-2xl text-sm sm:text-base">
-                Tenants craft preference profiles, our AI matches real listings, landlords verify identity + listings, and agents orchestrate portfolios inside a glass dashboard with messaging, analytics, and viewing scheduler.
+                No more hopping between Daft, email, WhatsApp, and spreadsheets. Gaff.ie handles discovery, messaging, status updates, and moderation in
+                one shared workflow.
               </p>
             </div>
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-              {[
-                { title: 'Tenant', desc: 'AI preference graph + instant matches' },
-                { title: 'Landlord', desc: 'Identity verification + listing analytics' },
-                { title: 'Agent', desc: 'Command center with bulk messaging + viewings' },
-              ].map((item) => (
-                <div key={item.title} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 text-slate-600">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{item.title}</p>
-                  <p className="text-base font-semibold text-slate-900">{item.desc}</p>
+              {workflowSteps.map((step) => (
+                <div key={step.title} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 text-slate-600">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{step.title}</p>
+                  <p className="text-base font-semibold text-slate-900">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -169,8 +209,8 @@ export default async function Home() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
             <div>
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Live marketplace</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Listings with built-in trust</h2>
-              <p className="text-slate-600 text-sm sm:text-base">Every card is a verified landlord, AI match score, and scam detection summary.</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Listings that stay accurate.</h2>
+              <p className="text-slate-600 text-sm sm:text-base">Landlords mark adverts as Let Agreed and the system auto-expires stale posts.</p>
             </div>
             <Link href="/search" className="ghost-pill w-full sm:w-auto text-center">
               Browse all listings
@@ -200,21 +240,21 @@ export default async function Home() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 grid lg:grid-cols-2 gap-6 sm:gap-8">
         <div className="glass-panel p-6 sm:p-8 space-y-6">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Verification layer</p>
-          <h3 className="text-2xl sm:text-3xl text-slate-900 font-semibold">AI + humans double-check every moment</h3>
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Trust layer</p>
+          <h3 className="text-2xl sm:text-3xl text-slate-900 font-semibold">Moderation and verification are built in, not bolted on.</h3>
           <ul className="space-y-4 text-slate-600 text-sm sm:text-base">
-            <li>• Real-time ID + property ownership verification</li>
-            <li>• Scam detection scanning imagery, pricing anomalies, IP reputation</li>
-            <li>• Viewing scheduler with attendance logging + trust score impact</li>
+            <li>• Landlords upload ID and proof of ownership before a listing goes live.</li>
+            <li>• Listings auto-expire if they aren’t refreshed, so you’re never messaging ghosts.</li>
+            <li>• Reports freeze the listing until a human moderator reviews the docs.</li>
           </ul>
           <div className="flex gap-6 text-center">
             <div>
-              <p className="text-4xl font-semibold text-[#0CE6FF]">78</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">signals per landlord</p>
+              <p className="text-4xl font-semibold text-[#0CE6FF]">One</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">shared inbox for both sides</p>
             </div>
             <div>
-              <p className="text-4xl font-semibold text-slate-900">0</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">live scam reports</p>
+              <p className="text-4xl font-semibold text-slate-900">Zero</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">tolerance for anonymous ads</p>
             </div>
           </div>
         </div>
@@ -228,16 +268,44 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24">
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Who it’s for</p>
+          <h2 className="text-3xl sm:text-4xl text-slate-900 font-semibold mt-2">Three audiences, one shared workflow.</h2>
+          <p className="text-slate-600 mt-4 text-sm sm:text-base">
+            Gaff.ie mirrors the exact journey each role takes today — but everything happens inside one product instead of a patchwork of Daft, email
+            threads, and spreadsheets.
+          </p>
+        </div>
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {personaStories.map((persona) => (
+            <div key={persona.role} className="glass-panel p-6 h-full flex flex-col">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">{persona.role}</p>
+              <h3 className="text-xl font-semibold text-slate-900 mt-2">{persona.headline}</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600 flex-1">
+                {persona.points.map((point) => (
+                  <li key={point} className="flex items-start gap-2">
+                    <span className="text-gaff-teal mt-0.5">•</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 text-center">
         <div className="glass-panel p-8 sm:p-10">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Future signal</p>
-          <h3 className="text-3xl sm:text-4xl text-slate-900 font-semibold mb-4">Feels like a spatial OS for property intelligence.</h3>
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Ready to switch?</p>
+          <h3 className="text-3xl sm:text-4xl text-slate-900 font-semibold mb-4">Leave the guessing games to Daft. Run the whole process here.</h3>
           <p className="text-slate-600 text-sm sm:text-base max-w-3xl mx-auto mb-8">
-            From aurora gradients to Spline heroes and p5.js signal noise, Gaff.ie brings immersive calm to housing. Join the operators who want speed, trust, and beauty in the same window.
+            Whether you’re renting, letting, or running an agency, Gaff.ie gives you verified profiles, an inbox that can’t fall over, and a moderation
+            team that actually responds. That’s the baseline — not a premium feature.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/auth/register" className="neon-button">
-              Activate your workspace
+              Create your account
             </Link>
             <Link href="/contact" className="ghost-pill">
               Talk to the team
