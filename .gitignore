@@ -3,3 +3,11 @@ node_modules/
 .env
 .env.local
 *.tsbuildinfo
+
+# Secrets & tokens
+tasks.json
+*.env
+.env.*
+!.env.example
+token_*.json
+

@@ -3,9 +3,9 @@
   "repo": "/data/workspace/gaff",
   "buildCmd": "npm run build",
   "pushCmd": "cd /data/workspace/gaff && git add -A && git commit -m 'feat: ${TASK_ID} - ${TASK_TITLE}' && git push origin main",
-  "deployCmd": "curl -s -X GET 'http://62.171.142.50:8000/api/v1/deploy?uuid=uc0gg4wkwwg0scc44ooowgws' -H 'Authorization: Bearer 13|gSfiGq086lrffy3M9oGxTMD6pBfrz7pPt1EsMzZQ6cd247ed'",
+  "deployCmd": "SET_IN_ENV_VAR",
   "techStack": "Next.js 16, Tailwind v4 (@import 'tailwindcss' + @theme), TypeScript, Prisma 5, PostgreSQL, jose (JWT), bcryptjs",
-  "dbExternal": "postgres://gaff:gaff_secure_2026_xK9m@62.171.142.50:6000/gaff",
+  "dbExternal": "SET_IN_ENV_VAR",
   "authPattern": "JWT via jose, cookie name gaff-token, use getTokenFromRequest() for API routes, getCurrentUser() for server components. See src/lib/auth.ts",
   "tasks": [
     {
@@ -75,7 +75,7 @@
     {
       "id": "T-004",
       "title": "Search sort and URL state persistence",
-      "description": "The search page needs: (1) sorting that actually works (newest, price asc, price desc — currently the sort select exists but doesn't send to API), (2) URL state — all filter values should sync to URL params so searches are shareable/bookmarkable, and (3) the API needs to accept a sort parameter.",
+      "description": "The search page needs: (1) sorting that actually works (newest, price asc, price desc \u2014 currently the sort select exists but doesn't send to API), (2) URL state \u2014 all filter values should sync to URL params so searches are shareable/bookmarkable, and (3) the API needs to accept a sort parameter.",
       "acceptanceCriteria": [
         "API accepts ?sort=newest|price_asc|price_desc and orders results accordingly",
         "Search page syncs all filter state to URL params (location, minPrice, maxPrice, bedrooms, propertyType, listingType, hapAccepted, petsAllowed, parking, furnished, berRating, sort)",
@@ -201,7 +201,7 @@
     {
       "id": "T-010",
       "title": "Email notifications for new matching listings",
-      "description": "When a new listing is created that matches a tenant's preferences (>= 70% match score), send them an email notification via AgentMail. Respect the tenant's alertFrequency preference (instant/daily/weekly). For instant: send immediately. For daily/weekly: skip (would need a batch job, out of scope for now — just implement instant).",
+      "description": "When a new listing is created that matches a tenant's preferences (>= 70% match score), send them an email notification via AgentMail. Respect the tenant's alertFrequency preference (instant/daily/weekly). For instant: send immediately. For daily/weekly: skip (would need a batch job, out of scope for now \u2014 just implement instant).",
       "acceptanceCriteria": [
         "After listing creation, check all tenants with preferences set",
         "For tenants with alertFrequency='instant' and emailAlerts=true, calculate match score",
@@ -218,7 +218,7 @@
       ],
       "priority": 10,
       "passes": true,
-      "notes": "AgentMail API: POST https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send, Bearer am_us_bf0131d67e249949523e8d72ba8b4ae5429ae0a44cfceab9f4bf60353a59d6ce"
+      "notes": "AgentMail: use AGENTMAIL_API_KEY env var"
     },
     {
       "id": "T-011",
