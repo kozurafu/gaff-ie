@@ -34,87 +34,87 @@ async function getListings(): Promise<Listing[]> {
   }
 }
 
-const stats = [
-  { value: "€0", label: "to list your property" },
-  { value: "ID-first", label: "owner onboarding" },
-  { value: "Inbox", label: "that tracks every reply" },
-  { value: "Weekly", label: "waitlist releases" },
+const heroStats = [
+  { value: "Verified", label: "Every landlord + agent before listing" },
+  { value: "€0", label: "To publish rentals, rooms, or sales" },
+  { value: "Inbox", label: "That shows every enquiry + response" },
+  { value: "Auto", label: "Listings expire unless marked as let" },
 ];
 
-const heroHighlights = [
+const heroFeatures = [
   {
-    title: "Built for Ireland",
-    detail: "County-level filters, euro pricing, HAP + BER context, and listings written for Irish renters." ,
+    title: "Search real Irish homes",
+    detail: "City, county, BER, pets, HAP, parking — filters that match how we actually rent here.",
   },
   {
-    title: "Profiles you can trust",
-    detail: "Landlords and agents onboard with legal ID and proof of ownership, so every ad is tied to a real person.",
+    title: "List for free in minutes",
+    detail: "Upload photos, add BER + availability, and publish without Daft’s €135 fee or ad spam.",
   },
   {
-    title: "One dashboard per role",
-    detail: "Renters track enquiries, landlords mark ads as let, and agents manage portfolios without spreadsheets.",
+    title: "Message without email chaos",
+    detail: "Enquiries, replies, and viewing invites stay in one shared thread so nobody wonders if it sent.",
   },
 ];
 
 const workflowSteps = [
   {
-    title: "Search & shortlist",
-    desc: "Filter by location, price, beds, pets, parking, and availability. Keep the homes you care about in one view.",
+    title: "Browse live stock",
+    desc: "Auto-expiring ads mean every card you click is still on the market, not a ghost from months ago.",
   },
   {
-    title: "Message inside Gaff",
-    desc: "Send enquiries without leaving the site. Every reply sits in the same thread, so nobody wonders if it was delivered.",
+    title: "Talk inside Gaff.ie",
+    desc: "Renters, landlords, and agents reply in one secure inbox with read receipts and tenant profiles.",
   },
   {
-    title: "See what happens next",
-    desc: "Owners mark listings as let, invite you to viewings, and share updates. No more guessing if an ad is already gone.",
+    title: "Close the loop",
+    desc: "Schedule viewings, mark Let Agreed, and archive the thread so the whole process stays documented.",
   },
 ];
 
 const trustSignals = [
   {
-    title: "Inbox that can’t disappear",
-    body: "Conversations live inside Gaff.ie with timestamps, so tenants and owners see the same history and nothing gets lost in email.",
+    title: "Identity + ownership checks",
+    body: "Owners upload ID and proof of ownership. No anonymous Gmail ads, no surprise middlemen.",
   },
   {
-    title: "Listings that stay honest",
-    body: "Every ad auto-expires if it isn’t refreshed and owners must mark properties as Let when they’re done.",
+    title: "Listings with expiry dates",
+    body: "If an advert isn’t refreshed or marked Let, it disappears. You never chase an already-gone place again.",
   },
   {
-    title: "Moderation with names attached",
-    body: "Report a listing or conversation and a human moderator freezes it until the docs check out. No burner accounts.",
+    title: "Moderators who act",
+    body: "Report a listing or chat and it freezes until a person reviews the docs. Deposits never move blindly.",
   },
 ];
 
 const personaStories = [
   {
     role: "Renters",
-    headline: "Verified homes + a real inbox.",
+    headline: "See what’s real, message who’s real.",
     points: [
-      "Browse only owner-backed listings instead of anonymous Gmail ads.",
-      "Send enquiries in-app and keep the whole thread — you always know who read it and when.",
-      "See when a property is marked Let so you stop chasing dead ads.",
-      "Flag anything suspicious and a moderator steps in before deposits move.",
+      "Filter Ireland-specific fields: HAP, BER, pets, parking, broadband, availability.",
+      "Send enquiries and keep every reply inside one thread with timestamps.",
+      "Know when a home is Let Agreed so you stop chasing stale ads.",
+      "Report scams and the platform steps in before deposits change hands.",
     ],
   },
   {
     role: "Landlords",
-    headline: "List for free and respond faster.",
+    headline: "List for €0 and keep a clean pipeline.",
     points: [
-      "Publish once, reuse it every time the tenancy renews — no €135 listing fees.",
-      "All enquiries drop into a single inbox with tenant profiles attached.",
-      "Shortlist applicants, schedule viewings, and close the ad in one click.",
-      "Upload ID + RTB details once so renters see a verified badge beside your name.",
+      "Create one listing and refresh it each tenancy instead of paying Daft every time.",
+      "All enquiries arrive with tenant profiles so you can shortlist quickly.",
+      "Mark Let Agreed, schedule viewings, and close threads without leaving the site.",
+      "Verified badge shows renters you’re a legitimate owner with RTB details on file.",
     ],
   },
   {
     role: "Estate agents",
-    headline: "Portfolio management without spreadsheets.",
+    headline: "Portfolio control without spreadsheets.",
     points: [
-      "Manage rentals and sales from one dashboard instead of juggling Daft, email, and CRM exports.",
-      "Assign enquiries to teammates and keep landlords updated with a clear pipeline.",
-      "Mark listings Let Agreed, watch response-time stats, and prove ROI to clients.",
-      "Export your data anytime — you own your leads and history.",
+      "Manage rentals + sales from a single dashboard with status columns.",
+      "Assign enquiries to teammates and give landlords visibility in real time.",
+      "Export your data or pipe it into your CRM whenever you need.",
+      "One flat subscription instead of dozens of per-ad charges.",
     ],
   },
 ];
@@ -129,14 +129,14 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-8 order-2 lg:order-1">
             <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-white text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500 shadow-sm">
-              Built in Ireland for renters, landlords & agents
+              Ireland’s verified property marketplace
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
-              <span className="text-slate-700 block">It’s a property app, not a classifieds board.</span>
+              <span className="text-slate-700 block">Find or list a home without Daft-era chaos.</span>
             </h1>
             <p className="text-base sm:text-lg text-slate-600 max-w-2xl">
-              Search verified homes, message owners inside Gaff.ie, and see exactly when a listing is gone. Landlords list for free and keep every reply
-              in one dashboard.
+              Gaff.ie is the Irish letting + sales site where every landlord is verified, listings auto-expire, and all enquiries live in one shared inbox.
+              Renters, landlords, and agents finally use the same source of truth.
             </p>
             <div className="glass-panel p-4">
               <SearchBar variant="hero" />
@@ -150,7 +150,7 @@ export default async function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-slate-700">
-              {stats.map((stat) => (
+              {heroStats.map((stat) => (
                 <div key={stat.label} className="glass-panel p-4 text-center">
                   <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
                   <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500">{stat.label}</p>
@@ -163,9 +163,9 @@ export default async function Home() {
             <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#FFDEE9] via-[#B5FFFC] to-[#E4FBFF] opacity-80 blur-3xl" />
             <div className="glass-panel relative p-6 sm:p-8 rounded-[32px] h-full">
               <div className="space-y-5">
-                <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.3em]">What you get today</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.3em]">Everything in one product</p>
                 <div className="space-y-4">
-                  {heroHighlights.map((item) => (
+                  {heroFeatures.map((item) => (
                     <div key={item.title} className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
                       <p className="text-sm text-slate-500">{item.title}</p>
                       <p className="text-lg font-semibold text-slate-900">{item.detail}</p>
@@ -173,7 +173,7 @@ export default async function Home() {
                   ))}
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white/80 p-4 text-sm text-slate-600">
-                  Gaff.ie replaces Daft.ie + email ping-pong. Search, messaging, viewings, and moderation happen in one place.
+                  It looks like a property platform because it is one — search, list, message, verify, and close deals right here.
                 </div>
               </div>
             </div>
@@ -185,11 +185,11 @@ export default async function Home() {
         <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-4xl">
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="flex-1 space-y-4">
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">How Gaff.ie works</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Everything from first search to keys happens here.</h2>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">How a listing actually flows</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Search, enquire, confirm keys — without leaving Gaff.ie.</h2>
               <p className="text-slate-600 max-w-2xl text-sm sm:text-base">
-                No more hopping between Daft, email, WhatsApp, and spreadsheets. Gaff.ie handles discovery, messaging, status updates, and moderation in
-                one shared workflow.
+                The same place that shows the ad lets you message the owner, see when it’s marked Let Agreed, and keep the whole paper trail. No extra
+                inboxes, no mystery gaps.
               </p>
             </div>
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
@@ -208,9 +208,9 @@ export default async function Home() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
             <div>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Live marketplace</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Listings that stay accurate.</h2>
-              <p className="text-slate-600 text-sm sm:text-base">Landlords mark adverts as Let Agreed and the system auto-expires stale posts.</p>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Live on the marketplace</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Actual homes renters can move into.</h2>
+              <p className="text-slate-600 text-sm sm:text-base">These are sample listings from the waitlist cohort. Click through — every one uses the same verified workflow.</p>
             </div>
             <Link href="/search" className="ghost-pill w-full sm:w-auto text-center">
               Browse all listings
@@ -241,20 +241,20 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 grid lg:grid-cols-2 gap-6 sm:gap-8">
         <div className="glass-panel p-6 sm:p-8 space-y-6">
           <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Trust layer</p>
-          <h3 className="text-2xl sm:text-3xl text-slate-900 font-semibold">Moderation and verification are built in, not bolted on.</h3>
+          <h3 className="text-2xl sm:text-3xl text-slate-900 font-semibold">Why the listings here feel different.</h3>
           <ul className="space-y-4 text-slate-600 text-sm sm:text-base">
-            <li>• Landlords upload ID and proof of ownership before a listing goes live.</li>
-            <li>• Listings auto-expire if they aren’t refreshed, so you’re never messaging ghosts.</li>
-            <li>• Reports freeze the listing until a human moderator reviews the docs.</li>
+            <li>• Government ID + ownership proof is required before an ad is visible.</li>
+            <li>• Listings automatically expire unless the owner refreshes or marks them Let.</li>
+            <li>• Moderators pause anything suspicious before deposits move.</li>
           </ul>
           <div className="flex gap-6 text-center">
             <div>
-              <p className="text-4xl font-semibold text-[#0CE6FF]">One</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">shared inbox for both sides</p>
+              <p className="text-4xl font-semibold text-[#0CE6FF]">1</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Shared inbox for both sides</p>
             </div>
             <div>
-              <p className="text-4xl font-semibold text-slate-900">Zero</p>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">tolerance for anonymous ads</p>
+              <p className="text-4xl font-semibold text-slate-900">0</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Anonymous ads allowed</p>
             </div>
           </div>
         </div>
@@ -270,11 +270,10 @@ export default async function Home() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24">
         <div className="text-center max-w-3xl mx-auto">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Who it’s for</p>
-          <h2 className="text-3xl sm:text-4xl text-slate-900 font-semibold mt-2">Three audiences, one shared workflow.</h2>
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Who it’s built for</p>
+          <h2 className="text-3xl sm:text-4xl text-slate-900 font-semibold mt-2">Renters, landlords, and agents all live in the same product.</h2>
           <p className="text-slate-600 mt-4 text-sm sm:text-base">
-            Gaff.ie mirrors the exact journey each role takes today — but everything happens inside one product instead of a patchwork of Daft, email
-            threads, and spreadsheets.
+            And each role gets the tooling they were missing on Daft — tenant profiles, landlord verification, and agent pipelines happen here by default.
           </p>
         </div>
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -297,11 +296,11 @@ export default async function Home() {
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 text-center">
         <div className="glass-panel p-8 sm:p-10">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Ready to switch?</p>
-          <h3 className="text-3xl sm:text-4xl text-slate-900 font-semibold mb-4">Leave the guessing games to Daft. Run the whole process here.</h3>
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Ready to list or rent?</p>
+          <h3 className="text-3xl sm:text-4xl text-slate-900 font-semibold mb-4">Show (or find) your next gaff on the Irish platform that actually works.</h3>
           <p className="text-slate-600 text-sm sm:text-base max-w-3xl mx-auto mb-8">
-            Whether you’re renting, letting, or running an agency, Gaff.ie gives you verified profiles, an inbox that can’t fall over, and a moderation
-            team that actually responds. That’s the baseline — not a premium feature.
+            Sign up, import your existing Daft listing if you have one, and keep the entire letting flow inside Gaff.ie. Your future tenants already expect
+            verified ads — give them that on day one.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/auth/register" className="neon-button">
