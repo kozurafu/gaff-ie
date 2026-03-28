@@ -3,8 +3,9 @@ import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getTokenFromRequest } from "@/lib/auth";
 
-const HMAC_SECRET = process.env.JWT_SECRET;
-if (!HMAC_SECRET) throw new Error("JWT_SECRET env var is required");
+const rawHmacSecret = process.env.JWT_SECRET;
+if (!rawHmacSecret) throw new Error("JWT_SECRET env var is required");
+const HMAC_SECRET = rawHmacSecret;
 const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
 const FROM_ADDRESS = "mmclaw@agentmail.to";
 const BASE_URL = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
