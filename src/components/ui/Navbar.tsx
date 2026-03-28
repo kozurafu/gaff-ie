@@ -218,7 +218,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   <Link href="/auth/login" className="ghost-pill text-sm font-semibold">Sign in</Link>
                   <Link href="/auth/register" className="neon-button text-sm">
-                    Join the waitlist
+                    Create account
                   </Link>
                 </div>
               ) : null}

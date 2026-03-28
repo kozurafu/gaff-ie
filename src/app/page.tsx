@@ -141,12 +141,15 @@ export default async function Home() {
             <div className="glass-panel p-4">
               <SearchBar variant="hero" />
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               <Link href="/listing/new" className="neon-button text-base text-center">
                 List your property
               </Link>
               <Link href="/search" className="ghost-pill text-base text-center">
                 Explore live listings
+              </Link>
+              <Link href="/auth/register" className="ghost-pill text-base text-center border-dashed">
+                Create account
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-slate-700">
