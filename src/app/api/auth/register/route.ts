@@ -1,28 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { signToken, setTokenOnResponse } from "@/lib/auth";
 import { sendVerificationEmail } from "@/app/api/auth/verify-email/route";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, role } = await request.json();
-
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    const validRoles = ["TENANT", "LANDLORD", "AGENT"];
-    const userRole = validRoles.includes(role) ? role : "TENANT";
+    const { email, password, name, role } = body as Record<string, unknown>;
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const errors: Record<string, string> = {};
+    if (!email || typeof email !== "string") errors.email = "Email is required";
+    if (!password || typeof password !== "string") errors.password = "Password is required";
+    if (!name || typeof name !== "string") errors.name = "Name is required";
+
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ error: "Validation failed", fields: errors }, { status: 400 });
+    }
+
+    const validRoles: UserRole[] = [UserRole.TENANT, UserRole.LANDLORD, UserRole.AGENT];
+    const userRole: UserRole = validRoles.includes(role as UserRole) ? (role as UserRole) : UserRole.TENANT;
+
+    const existing = await prisma.user.findUnique({ where: { email: email as string } });
     if (existing) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Validation failed", fields: { email: "Email already registered" } },
+        { status: 400 }
+      );
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password as string, 12);
     const user = await prisma.user.create({
-      data: { email, passwordHash, name, role: userRole },
+      data: { email: email as string, passwordHash, name: name as string, role: userRole },
     });
 
     // Send verification email (fire-and-forget)
@@ -33,7 +47,7 @@ export async function POST(request: NextRequest) {
     const token = await signToken({ sub: user.id, email: user.email, role: user.role });
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
-    }, { status: 201 });
+    });
     setTokenOnResponse(response, token);
     return response;
   } catch (err) {

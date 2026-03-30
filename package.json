@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "test": "jest --no-coverage"
   },
   "keywords": [],
   "author": "",
@@ -39,8 +40,11 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.1",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.21.0"
   }
 }
