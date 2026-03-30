@@ -179,3 +179,20 @@
 - If no recent view: uses prisma.listing.update with increment; if recent: uses findUnique (no increment)
 - View count already displayed on listing detail page (Property Details section) and dashboard listing rows — no changes needed
 - Build passes ✅
+
+## 2026-03-30 — US-001: Stabilize /api/auth/register (Ralph)
+- Changed register response from 201 to 200 per acceptance criteria
+- Changed duplicate email response from 409 to 400 with structured field errors
+- Added structured field error format: `{ error: "Validation failed", fields: { fieldName: "message" } }` for all validation failures
+- Imported UserRole enum from @prisma/client for type-safe role assignment
+- Installed Jest (v30) + ts-jest + @types/jest as dev dependencies
+- Created jest.config.ts with ts-jest preset and @/* path alias support
+- Created __tests__/api/auth/register.test.ts with 5 tests: success (200+cookie), missing email, missing password, duplicate email, invalid role fallback
+- Added `"test": "jest --no-coverage"` to package.json scripts
+- All tests pass, typecheck passes
+- **Learnings for future iterations:**
+  - Jest tests require `/// <reference types="jest" />` at top of test files (tsconfig uses bundler moduleResolution which doesn't auto-include @types/jest)
+  - ts-jest needs `ignoreDeprecations: "6.0"` in tsconfig override due to TypeScript 6 deprecating moduleResolution=node10
+  - UserRole must be imported from @prisma/client when used in Prisma create/update calls (not string literals)
+  - prd.json and progress.txt in /data/workspace/ralph are owned by root — cannot update from devuser; code committed/pushed to gaff-ie repo instead
+---
