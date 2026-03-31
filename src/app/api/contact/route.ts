@@ -3,13 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
 const INBOX = 'mmclaw@agentmail.to';
 
-function requireAgentMailKey(): string {
-  if (!AGENTMAIL_API_KEY) {
-    throw new Error('AGENTMAIL_API_KEY is not configured');
-  }
-  return AGENTMAIL_API_KEY;
-}
-
 export async function POST(req: NextRequest) {
   const { name, email, subject, message } = await req.json();
 
@@ -21,12 +14,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
   }
 
+  if (!AGENTMAIL_API_KEY) {
+    console.error('Contact form missing AGENTMAIL_API_KEY');
+    return NextResponse.json({ error: 'Email temporarily unavailable' }, { status: 503 });
+  }
+
   try {
     const response = await fetch(`https://api.agentmail.to/v0/inboxes/${INBOX}/messages/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${requireAgentMailKey()}`,
+        Authorization: `Bearer ${AGENTMAIL_API_KEY}`,
       },
       body: JSON.stringify({
         to: [INBOX],
