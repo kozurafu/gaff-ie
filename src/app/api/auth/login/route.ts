@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signToken, setTokenOnResponse } from "@/lib/auth";
 
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
-
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    const body = loginSchema.safeParse(await request.json());
+    if (!body.success) {
+      return NextResponse.json(
+        { error: "Invalid login payload", details: body.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
 
+    const { email, password } = body.data;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

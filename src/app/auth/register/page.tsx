@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { passwordChecks, getPasswordFailures } from '@/lib/password-policy';
 
 type Role = 'TENANT' | 'LANDLORD' | 'AGENT';
 
@@ -14,13 +15,28 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<Role>('TENANT');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const passwordIssues = useMemo(() => getPasswordFailures(password), [password]);
+  const passwordsMatch = password === confirmPassword || confirmPassword.length === 0;
+  const canSubmit = !loading && passwordIssues.length === 0 && password.length > 0 && password === confirmPassword && !!name && !!email;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (passwordIssues.length > 0) {
+      setError('Password does not meet the requirements');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
@@ -73,8 +89,35 @@ export default function RegisterPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 8 characters" className={inputClass} />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="12+ characters, mix of letters, numbers & symbols"
+                  className={inputClass}
+                />
+                <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600 space-y-1">
+                  {passwordChecks.map((rule) => (
+                    <p key={rule.id} className={passwordIssues.includes(rule.label) ? 'text-gray-400' : 'text-gaff-teal font-medium'}>
+                      {passwordIssues.includes(rule.label) ? '○' : '●'} {rule.label}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  className={`${inputClass} ${!passwordsMatch ? 'border-red-300 focus:ring-red-200 focus:border-red-400' : ''}`}
+                />
+                {!passwordsMatch && confirmPassword.length > 0 && (
+                  <p className="text-xs text-red-500 mt-1">Passwords must match.</p>
+                )}
               </div>
 
               <div>
@@ -103,18 +146,21 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gaff-teal text-white py-3 rounded-lg font-semibold hover:bg-gaff-teal-dark transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Creating account...' : 'Create Account'}
-              </button>
+              <div className="space-y-3 pb-6">
+                <div className="bg-white/95 md:bg-transparent md:backdrop-blur-0 backdrop-blur sticky bottom-0 left-0 right-0 md:static md:p-0 p-3 rounded-2xl shadow-sm md:shadow-none border border-gray-100/60 md:border-none">
+                  <button
+                    type="submit"
+                    disabled={!canSubmit}
+                    className="w-full bg-gaff-teal text-white py-3 rounded-xl font-semibold hover:bg-gaff-teal-dark transition-colors disabled:opacity-50 shadow-lg shadow-gaff-teal/20"
+                  >
+                    {loading ? 'Creating account...' : 'Create Account'}
+                  </button>
+                  <p className="mt-2 text-[11px] text-center text-gray-500">
+                    By signing up, you agree to our <a href="/terms" className="underline">Terms</a> and <a href="/privacy" className="underline">Privacy Policy</a>.
+                  </p>
+                </div>
+              </div>
             </form>
-
-            <p className="mt-4 text-xs text-gray-400 text-center">
-              By signing up, you agree to our <a href="/terms" className="underline">Terms</a> and <a href="/privacy" className="underline">Privacy Policy</a>.
-            </p>
 
             <div className="mt-6 text-center text-sm text-gray-500">
               Already have an account?{' '}

@@ -4,9 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { getTokenFromRequest } from "@/lib/auth";
 
 const rawHmacSecret = process.env.JWT_SECRET;
-if (!rawHmacSecret) throw new Error("JWT_SECRET env var is required");
-const HMAC_SECRET = rawHmacSecret;
+const HMAC_SECRET = rawHmacSecret || 'gaff-dev-secret';
 const AGENTMAIL_API_KEY = process.env.AGENTMAIL_API_KEY;
+
+function ensureSecret() {
+  if (!rawHmacSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET env var is required');
+  }
+}
 const FROM_ADDRESS = "mmclaw@agentmail.to";
 const BASE_URL = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
 
@@ -18,6 +23,7 @@ function requireAgentMailKey(): string {
 }
 
 function generateToken(userId: string): string {
+  ensureSecret();
   const expiry = Math.floor(Date.now() / 1000) + 86400; // 24h
   const data = `${userId}:${expiry}`;
   const sig = createHmac("sha256", HMAC_SECRET).update(data).digest("hex");
@@ -26,6 +32,7 @@ function generateToken(userId: string): string {
 
 function verifyEmailToken(token: string): { userId: string } | null {
   try {
+    ensureSecret();
     const decoded = Buffer.from(token, "base64url").toString();
     const [userId, expiryStr, sig] = decoded.split(":");
     const expiry = parseInt(expiryStr);

@@ -74,18 +74,23 @@ export function clearTokenOnResponse(response: Response): Response {
 }
 
 export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE_NAME)?.value;
+    if (!token) return null;
 
-  const payload = await verifyToken(token);
-  if (!payload) return null;
+    const payload = await verifyToken(token);
+    if (!payload) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: { id: true, email: true, name: true, role: true, avatar: true, createdAt: true },
-  });
-  return user;
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, email: true, name: true, role: true, avatar: true, createdAt: true },
+    });
+    return user;
+  } catch (err) {
+    console.error('getCurrentUser error', err);
+    return null;
+  }
 }
 
 export async function getTokenFromRequest(request: Request): Promise<JWTPayload | null> {

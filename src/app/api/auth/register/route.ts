@@ -1,19 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signToken, setTokenOnResponse } from "@/lib/auth";
 import { sendVerificationEmail } from "@/app/api/auth/verify-email/route";
+import { getPasswordFailures, isPasswordStrong } from "@/lib/password-policy";
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+  name: z.string().min(2, "Name is required"),
+  role: z.enum(["TENANT", "LANDLORD", "AGENT"]).default("TENANT"),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, role } = await request.json();
-
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 });
+    const body = registerSchema.safeParse(await request.json());
+    if (!body.success) {
+      return NextResponse.json(
+        { error: "Invalid registration data", details: body.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
 
-    const validRoles = ["TENANT", "LANDLORD", "AGENT"];
-    const userRole = validRoles.includes(role) ? role : "TENANT";
+    const { email, password, name, role } = body.data;
+    if (!isPasswordStrong(password)) {
+      return NextResponse.json(
+        { error: "Password does not meet requirements", checklist: getPasswordFailures(password) },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -22,11 +38,11 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { email, passwordHash, name, role: userRole },
+      data: { email, passwordHash, name, role },
     });
 
     // Send verification email (fire-and-forget)
-    sendVerificationEmail(user.id, user.email).catch(err =>
+    sendVerificationEmail(user.id, user.email).catch((err) =>
       console.error("Failed to send verification email:", err)
     );
 
