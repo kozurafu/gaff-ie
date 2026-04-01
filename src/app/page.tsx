@@ -124,8 +124,12 @@ export default async function Home() {
 
   return (
     <main className="relative overflow-hidden pb-24">
-      <section className="relative pt-28 pb-16 sm:pb-24 hero-gradient">
-        <div className="noise-overlay" />
+      <section className="relative overflow-hidden pt-28 pb-16 sm:pb-24">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[url('/hero-landing.jpg')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/90 to-white/70" />
+        </div>
+        <div className="noise-overlay z-0" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="space-y-8 order-2 lg:order-1">
             <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-white text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500 shadow-sm">

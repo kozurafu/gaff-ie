@@ -42,9 +42,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Send verification email (fire-and-forget)
-    sendVerificationEmail(user.id, user.email).catch((err) =>
-      console.error("Failed to send verification email:", err)
-    );
+    if (process.env.AGENTMAIL_API_KEY) {
+      sendVerificationEmail(user.id, user.email).catch((err) =>
+        console.error("Failed to send verification email:", err)
+      );
+    } else {
+      console.warn("AGENTMAIL_API_KEY missing — skipping verification email send");
+    }
 
     const token = await signToken({ sub: user.id, email: user.email, role: user.role });
     const response = NextResponse.json({
