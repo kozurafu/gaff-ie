@@ -124,10 +124,11 @@ export default async function Home() {
 
   return (
     <main className="relative overflow-hidden pb-24">
-      <section className="relative overflow-hidden pt-28 pb-16 sm:pb-24">
+      <section className="relative overflow-hidden pt-36 sm:pt-40 pb-16 sm:pb-24 -mt-16 sm:-mt-20">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[url('/hero-landing.jpg')] bg-cover bg-center" />
-          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/90 to-white/70" />
+          <div className="absolute inset-0 bg-[url('/hero-landing.jpg')] bg-cover bg-center brightness-110 contrast-[1.05]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/45 to-white/15" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/85 via-white/55 to-transparent" />
         </div>
         <div className="noise-overlay z-0" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
