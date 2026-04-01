@@ -7,7 +7,7 @@ const csp = [
   "default-src 'self'",
   "img-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
   "font-src 'self' https: data:",
   "connect-src 'self' https://api.agentmail.to https://api.stripe.com",
 ].join('; ');
