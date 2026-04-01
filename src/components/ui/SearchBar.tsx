@@ -24,16 +24,40 @@ export default function SearchBar({ variant = 'hero' }: { variant?: 'hero' | 'co
 
   const isHero = variant === 'hero';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildSearchParams = (typeOverride?: string) => {
     const params = new URLSearchParams();
-    params.set('listingType', listingType);
-    if (location) params.set('location', location);
+    params.set('listingType', typeOverride ?? listingType);
+    if (location.trim()) params.set('location', location.trim());
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
     if (bedrooms !== 'Any') params.set('bedrooms', bedrooms);
-    if (propertyType !== 'Any') params.set('type', propertyType);
+    if (propertyType !== 'Any') params.set('propertyType', propertyType);
+    return params;
+  };
+
+  const submitSearch = (typeOverride?: string) => {
+    const params = buildSearchParams(typeOverride);
     window.location.href = `/search?${params.toString()}`;
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    submitSearch();
+  };
+
+  const hasCustomInputs = Boolean(
+    location.trim() ||
+    minPrice ||
+    maxPrice ||
+    bedrooms !== 'Any' ||
+    propertyType !== 'Any'
+  );
+
+  const handleListingTypeClick = (value: string) => {
+    setListingType(value);
+    if (!hasCustomInputs) {
+      submitSearch(value);
+    }
   };
 
   const inputClass =
@@ -79,7 +103,7 @@ export default function SearchBar({ variant = 'hero' }: { variant?: 'hero' | 'co
             <button
               key={tab.value}
               type="button"
-              onClick={() => setListingType(tab.value)}
+              onClick={() => handleListingTypeClick(tab.value)}
               className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
                 listingType === tab.value
                   ? 'bg-slate-900 text-white shadow-lg'

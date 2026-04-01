@@ -139,7 +139,7 @@ export default async function Home() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
               <span className="text-slate-700 block">Find or list a home without Daft-era chaos.</span>
             </h1>
-            <div className="max-w-2xl rounded-3xl bg-white/85 backdrop-blur border border-white/70 shadow-[0_35px_80px_rgba(15,23,42,0.12)] p-4 sm:p-5 text-base sm:text-lg text-slate-700">
+            <div className="max-w-2xl rounded-3xl bg-white/95 backdrop-blur border border-white/80 shadow-[0_45px_90px_rgba(15,23,42,0.18)] p-4 sm:p-5 text-base sm:text-lg text-slate-800">
               Gaff.ie is the Irish letting + sales site where every landlord is verified, listings auto-expire, and all enquiries live in one shared inbox.
               Renters, landlords, and agents finally use the same source of truth.
             </div>
