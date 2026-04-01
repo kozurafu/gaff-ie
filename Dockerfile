@@ -7,6 +7,10 @@ RUN npm ci
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
+ARG STRIPE_SECRET_KEY=""
+ARG FORCE_HTTPS="true"
+ENV STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+ENV FORCE_HTTPS=${FORCE_HTTPS}
 RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
