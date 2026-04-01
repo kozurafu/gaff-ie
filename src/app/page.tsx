@@ -124,8 +124,8 @@ export default async function Home() {
 
   return (
     <main className="relative overflow-hidden pb-24">
-      <section className="relative overflow-hidden pt-36 sm:pt-40 pb-16 sm:pb-24 -mt-16 sm:-mt-20">
-        <div className="absolute inset-0 -z-10">
+      <section className="relative overflow-hidden pt-36 sm:pt-40 pb-16 sm:pb-24">
+        <div className="absolute left-0 right-0 -top-24 bottom-0 -z-10">
           <div className="absolute inset-0 bg-[url('/hero-landing.jpg')] bg-cover bg-center brightness-110 contrast-[1.05]" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/45 to-white/15" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/85 via-white/55 to-transparent" />
@@ -139,10 +139,10 @@ export default async function Home() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
               <span className="text-slate-700 block">Find or list a home without Daft-era chaos.</span>
             </h1>
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl">
+            <div className="max-w-2xl rounded-3xl bg-white/85 backdrop-blur border border-white/70 shadow-[0_35px_80px_rgba(15,23,42,0.12)] p-4 sm:p-5 text-base sm:text-lg text-slate-700">
               Gaff.ie is the Irish letting + sales site where every landlord is verified, listings auto-expire, and all enquiries live in one shared inbox.
               Renters, landlords, and agents finally use the same source of truth.
-            </p>
+            </div>
             <div className="glass-panel p-4">
               <SearchBar variant="hero" />
             </div>
