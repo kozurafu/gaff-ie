@@ -5,6 +5,10 @@ import { Prisma } from "@prisma/client";
 import { analyzeListingForScams, calculateRiskScore } from "@/lib/scamDetection";
 import { notifyMatchingTenants } from "@/lib/listingNotifications";
 
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -58,13 +62,6 @@ export async function GET(request: NextRequest) {
         { county: { contains: q, mode: "insensitive" } },
       ];
     }
-
-    // Auto-expire listings older than 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    await prisma.listing.updateMany({
-      where: { status: "ACTIVE", createdAt: { lt: thirtyDaysAgo } },
-      data: { status: "EXPIRED" },
-    });
 
     const sort = searchParams.get("sort");
     let orderBy: Prisma.ListingOrderByWithRelationInput = { createdAt: "desc" };
@@ -154,12 +151,16 @@ export async function POST(request: NextRequest) {
       // High risk: set to DRAFT, create FlaggedListing
       riskAction = 'auto_flagged';
       await prisma.listing.update({ where: { id: listing.id }, data: { status: "DRAFT" } });
-      await prisma.$executeRaw`INSERT INTO flagged_listings (id, "listingId", "riskScore", flags, status, "createdAt") VALUES (${`fl_${listing.id}`}, ${listing.id}, ${riskScore}, ${JSON.stringify(flags)}::jsonb, 'PENDING', NOW())`;
+      await prisma.flaggedListing.create({
+        data: { listingId: listing.id, riskScore, flags: toJsonValue(flags), status: 'PENDING' },
+      });
       listing.status = "DRAFT" as typeof listing.status;
     } else if (riskScore >= 40) {
       // Medium risk: keep ACTIVE but flag for review
       riskAction = 'warning';
-      await prisma.$executeRaw`INSERT INTO flagged_listings (id, "listingId", "riskScore", flags, status, "createdAt") VALUES (${`fl_${listing.id}`}, ${listing.id}, ${riskScore}, ${JSON.stringify(flags)}::jsonb, 'PENDING', NOW())`;
+      await prisma.flaggedListing.create({
+        data: { listingId: listing.id, riskScore, flags: toJsonValue(flags), status: 'PENDING' },
+      });
     }
 
     // Notify matching tenants (fire-and-forget, only for active listings)

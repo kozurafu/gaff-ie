@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 
 const HMAC_SECRET = process.env.JWT_SECRET || "gaff-production-secret-x7k9m2p4";
 
@@ -26,6 +27,14 @@ function verifyResetToken(token: string): { userId: string } | null {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = checkRateLimit(getClientIp(request), 'reset-password');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many reset attempts. Please try again later." },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
     const { token, password } = await request.json();
 
     if (!token || !password) {
@@ -49,7 +58,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { id: result.userId },
-      data: { password: hashedPassword },
+      data: { passwordHash: hashedPassword },
     });
 
     return NextResponse.json({ message: "Password reset successfully. You can now log in." });

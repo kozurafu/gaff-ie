@@ -101,13 +101,20 @@ function calculateMatchScore(prefs: {
 
 const AGENTMAIL_API = 'https://api.agentmail.to/v0/inboxes/mmclaw@agentmail.to/messages/send';
 const AGENTMAIL_TOKEN = process.env.AGENTMAIL_API_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://uc0gg4wkwwg0scc44ooowgws.62.171.142.50.sslip.io';
 
 function getAgentMailToken(): string {
   if (!AGENTMAIL_TOKEN) {
     throw new Error('AGENTMAIL_API_KEY is not configured');
   }
   return AGENTMAIL_TOKEN;
+}
+
+function getAppUrl(): string {
+  const url = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_URL;
+  if (!url) {
+    throw new Error('NEXT_PUBLIC_APP_URL is not configured — cannot send email notifications');
+  }
+  return url.replace(/\/$/, '');
 }
 
 async function sendEmailNotification(toEmail: string, toName: string, listing: ListingForMatch, matchScore: number): Promise<boolean> {
@@ -121,7 +128,7 @@ async function sendEmailNotification(toEmail: string, toName: string, listing: L
       body: JSON.stringify({
         to: toEmail,
         subject: `🏠 ${matchScore}% Match: ${listing.title} — €${listing.price}/mo in ${listing.city}`,
-        body_text: `Hi ${toName},\n\nA new listing on Gaff.ie matches your preferences!\n\n${listing.title}\n💰 €${listing.price}/month\n📍 ${listing.city}, ${listing.county}\n🛏️ ${listing.bedrooms} bedroom(s)\n🎯 ${matchScore}% match\n\nView listing: ${APP_URL}/listing/${listing.id}\n\nYou're receiving this because you have instant email alerts enabled. Update your preferences at ${APP_URL}/dashboard/preferences\n\n— Gaff.ie`,
+        body_text: `Hi ${toName},\n\nA new listing on Gaff.ie matches your preferences!\n\n${listing.title}\n💰 €${listing.price}/month\n📍 ${listing.city}, ${listing.county}\n🛏️ ${listing.bedrooms} bedroom(s)\n🎯 ${matchScore}% match\n\nView listing: ${getAppUrl()}/listing/${listing.id}\n\nYou're receiving this because you have instant email alerts enabled. Update your preferences at ${getAppUrl()}/dashboard/preferences\n\n— Gaff.ie`,
         body_html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
 <h2 style="color:#0C9B8A">🏠 New Match on Gaff.ie</h2>
 <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0">
@@ -131,8 +138,8 @@ async function sendEmailNotification(toEmail: string, toName: string, listing: L
 <p style="margin:4px 0">🛏️ ${listing.bedrooms} bedroom(s)</p>
 <p style="margin:4px 0">🎯 <strong style="color:#0C9B8A">${matchScore}% match</strong> with your preferences</p>
 </div>
-<a href="${APP_URL}/listing/${listing.id}" style="display:inline-block;background:#0C9B8A;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold">View Listing →</a>
-<p style="color:#6b7280;font-size:12px;margin-top:24px">You're receiving this because you have instant email alerts enabled on Gaff.ie.<br><a href="${APP_URL}/dashboard/preferences">Update preferences</a></p>
+<a href="${getAppUrl()}/listing/${listing.id}" style="display:inline-block;background:#0C9B8A;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold">View Listing →</a>
+<p style="color:#6b7280;font-size:12px;margin-top:24px">You're receiving this because you have instant email alerts enabled on Gaff.ie.<br><a href="${getAppUrl()}/dashboard/preferences">Update preferences</a></p>
 </div>`,
       }),
     });

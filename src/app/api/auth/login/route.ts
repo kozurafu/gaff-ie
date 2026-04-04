@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signToken, setTokenOnResponse } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -11,6 +12,14 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = checkRateLimit(getClientIp(request), 'login');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
     const body = loginSchema.safeParse(await request.json());
     if (!body.success) {
       return NextResponse.json(

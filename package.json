@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1024.0",
     "@prisma/client": "^5.22.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/bcryptjs": "^2.4.6",
@@ -33,7 +34,7 @@
     "react-dom": "^19.2.4",
     "stripe": "^20.4.1",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2",
+    "typescript": "~5.7.3",
     "zod": "^4.3.6"
   },
   "prisma": {
