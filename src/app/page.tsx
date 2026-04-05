@@ -124,14 +124,14 @@ export default async function Home() {
 
   return (
     <main className="relative overflow-hidden pb-24">
-      <section className="relative overflow-hidden pt-36 sm:pt-40 pb-16 sm:pb-24">
+      <section className="relative overflow-hidden pt-28 sm:pt-32 pb-10 sm:pb-16">
         <div className="absolute left-0 right-0 -top-24 bottom-0 -z-10">
           <div className="absolute inset-0 bg-[url('/hero-landing.jpg')] bg-cover bg-center brightness-110 contrast-[1.05]" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/45 to-white/15" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/85 via-white/55 to-transparent" />
         </div>
         <div className="noise-overlay z-0" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-start">
           <div className="space-y-8 order-2 lg:order-1">
             <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-white text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-500 shadow-sm">
               Ireland’s verified property marketplace
@@ -139,11 +139,10 @@ export default async function Home() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-slate-900 tracking-tight leading-tight">
               <span className="text-slate-700 block">Find or list a home without Daft-era chaos.</span>
             </h1>
-            <div className="max-w-2xl rounded-3xl bg-white/95 backdrop-blur border border-white/80 shadow-[0_45px_90px_rgba(15,23,42,0.18)] p-4 sm:p-5 text-base sm:text-lg text-slate-800">
+            <p className="max-w-2xl text-base sm:text-lg text-slate-700 leading-relaxed">
               Gaff.ie is the Irish letting + sales site where every landlord is verified, listings auto-expire, and all enquiries live in one shared inbox.
-              Renters, landlords, and agents finally use the same source of truth.
-            </div>
-            <div className="glass-panel p-4">
+            </p>
+            <div className="glass-panel p-5 sm:p-6 shadow-[0_30px_80px_rgba(15,23,42,0.2)]">
               <SearchBar variant="hero" />
             </div>
             <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
@@ -167,7 +166,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="relative order-1 lg:order-2">
+          <div className="relative order-1 lg:order-2 lg:mt-8">
             <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-[#FFDEE9] via-[#B5FFFC] to-[#E4FBFF] opacity-80 blur-3xl" />
             <div className="glass-panel relative p-6 sm:p-8 rounded-[32px] h-full">
               <div className="space-y-5">
@@ -189,7 +188,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-10">
         <div className="glass-panel p-5 sm:p-6 lg:p-8 rounded-4xl">
           <div className="flex flex-col lg:flex-row gap-6 items-stretch">
             <div className="flex-1 space-y-4">
