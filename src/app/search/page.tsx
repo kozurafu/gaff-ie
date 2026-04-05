@@ -184,7 +184,7 @@ function SearchPageInner() {
     'rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gaff-slate focus:outline-none focus:ring-2 focus:ring-gaff-teal/30 focus:border-gaff-teal/50 appearance-none transition-all';
 
   return (
-    <div className="min-h-screen bg-gaff-warm">
+    <div className="min-h-screen bg-gaff-warm pt-20">
       {/* Listing type tabs */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
@@ -210,7 +210,7 @@ function SearchPageInner() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white border-b border-gray-100 sticky top-[60px] z-30">
+      <div className="bg-white border-b border-gray-100 sticky top-[85px] z-30">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             {/* Keyword search */}
