@@ -78,6 +78,8 @@ function SearchPageInner() {
   const [saveSearchName, setSaveSearchName] = useState('');
   const [saveSearchDone, setSaveSearchDone] = useState(false);
   const [savingSearch, setSavingSearch] = useState(false);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   // Sync state to URL params
   const syncUrl = useCallback(() => {
@@ -113,6 +115,41 @@ function SearchPageInner() {
       setMoreFilters(true);
     }
   }, []);
+
+  // Load saved listing IDs
+  useEffect(() => {
+    fetch('/api/saved-listings')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.savedListings) {
+          setSavedIds(new Set(data.savedListings.map((s: { listingId: string }) => s.listingId)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleSaveListing = async (e: React.MouseEvent, listingId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (savingId) return;
+    setSavingId(listingId);
+    try {
+      const res = await fetch('/api/saved-listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSavedIds(prev => {
+          const next = new Set(prev);
+          data.saved ? next.add(listingId) : next.delete(listingId);
+          return next;
+        });
+      }
+    } catch { /* ignore */ }
+    setSavingId(null);
+  };
 
   const handleSaveSearch = async () => {
     if (!saveSearchName.trim() || savingSearch) return;
@@ -405,24 +442,36 @@ function SearchPageInner() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {listings.map((l) => (
-                <a key={l.id} href={`/listing/${l.id}`} className="block">
-                  <ListingCard
-                    image={typeof l.images?.[0] === 'string' ? l.images[0] : (l.images?.[0] as unknown as {url:string})?.url ?? ''}
-                    price={l.price}
-                    bedrooms={l.bedrooms}
-                    bathrooms={l.bathrooms}
-                    sqft={l.sqft}
-                    address={l.address || (l as unknown as {addressLine1:string}).addressLine1 || ''}
-                    area={l.area || (l as unknown as {city:string,county:string}).city || ''}
-                    verified={l.verified ?? true}
-                    hapWelcome={l.hapWelcome ?? (l as unknown as {hapAccepted:boolean}).hapAccepted}
-                    petsAllowed={(l as unknown as {petsAllowed:boolean}).petsAllowed}
-                    parkingIncluded={(l as unknown as {parkingIncluded:boolean}).parkingIncluded}
-                    timeAgo={l.createdAt ? timeAgo(l.createdAt) : 'Recently'}
-                    propertyType={l.propertyType}
-                    createdAt={l.createdAt}
-                  />
-                </a>
+                <div key={l.id} className="relative group">
+                  <a href={`/listing/${l.id}`} className="block">
+                    <ListingCard
+                      image={typeof l.images?.[0] === 'string' ? l.images[0] : (l.images?.[0] as unknown as {url:string})?.url ?? ''}
+                      price={l.price}
+                      bedrooms={l.bedrooms}
+                      bathrooms={l.bathrooms}
+                      sqft={l.sqft}
+                      address={l.address || (l as unknown as {addressLine1:string}).addressLine1 || ''}
+                      area={l.area || (l as unknown as {city:string,county:string}).city || ''}
+                      verified={l.verified ?? true}
+                      hapWelcome={l.hapWelcome ?? (l as unknown as {hapAccepted:boolean}).hapAccepted}
+                      petsAllowed={(l as unknown as {petsAllowed:boolean}).petsAllowed}
+                      parkingIncluded={(l as unknown as {parkingIncluded:boolean}).parkingIncluded}
+                      timeAgo={l.createdAt ? timeAgo(l.createdAt) : 'Recently'}
+                      propertyType={l.propertyType}
+                      createdAt={l.createdAt}
+                    />
+                  </a>
+                  <button
+                    onClick={(e) => toggleSaveListing(e, l.id)}
+                    disabled={savingId === l.id}
+                    className="absolute top-3 right-3 z-10 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                    title={savedIds.has(l.id) ? 'Remove from saved' : 'Save property'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={savedIds.has(l.id) ? '#0D9488' : 'none'} stroke={savedIds.has(l.id) ? '#0D9488' : '#6B7280'} strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
 

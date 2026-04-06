@@ -186,6 +186,12 @@ export default function ListingDetailPage() {
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState('');
   const [bookingInProgress, setBookingInProgress] = useState(false);
+  const [showAddViewing, setShowAddViewing] = useState(false);
+  const [newSlotDate, setNewSlotDate] = useState('');
+  const [newSlotTime, setNewSlotTime] = useState('');
+  const [newSlotDuration, setNewSlotDuration] = useState('30');
+  const [newSlotMax, setNewSlotMax] = useState('1');
+  const [addingSlot, setAddingSlot] = useState(false);
 
   const toggleSave = async () => {
     if (savingListing) return;
@@ -231,10 +237,8 @@ export default function ListingDetailPage() {
   // Fetch viewing slots
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/listings/${id}/viewings`)
-      .then(r => r.ok ? r.json() : { slots: [] })
-      .then(data => setViewingSlots(data.slots ?? []))
-      .catch(() => {});
+    fetchViewingSlots();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const bookViewing = async (slotId: string) => {
@@ -252,6 +256,37 @@ export default function ListingDetailPage() {
       }
     } catch { /* ignore */ }
     setBookingInProgress(false);
+  };
+
+  const fetchViewingSlots = () => {
+    fetch(`/api/listings/${id}/viewings`)
+      .then(r => r.ok ? r.json() : { slots: [] })
+      .then(data => setViewingSlots(data.slots ?? []))
+      .catch(() => {});
+  };
+
+  const createViewingSlot = async () => {
+    if (!newSlotDate || !newSlotTime) return;
+    setAddingSlot(true);
+    try {
+      const dateTime = new Date(`${newSlotDate}T${newSlotTime}`).toISOString();
+      const res = await fetch(`/api/listings/${id}/viewings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateTime,
+          durationMins: Number(newSlotDuration),
+          maxAttendees: Number(newSlotMax),
+        }),
+      });
+      if (res.ok) {
+        setShowAddViewing(false);
+        setNewSlotDate('');
+        setNewSlotTime('');
+        fetchViewingSlots();
+      }
+    } catch { /* ignore */ }
+    setAddingSlot(false);
   };
 
   // Check saved state
@@ -663,8 +698,64 @@ export default function ListingDetailPage() {
               </div>
             </section>
 
+            {/* Landlord: Add Viewing Slot */}
+            {currentUser && listing && currentUser.id === listing.user.id && (
+              <section className="bg-white rounded-xl border border-gray-100 p-6 mb-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">📅 Manage Viewings</h2>
+                  <button
+                    onClick={() => setShowAddViewing(!showAddViewing)}
+                    className="text-sm font-semibold text-gaff-teal border border-gaff-teal/30 px-3 py-1.5 rounded-lg hover:bg-gaff-teal/5 transition-colors"
+                  >
+                    {showAddViewing ? 'Cancel' : '+ Add Slot'}
+                  </button>
+                </div>
+                {showAddViewing && (
+                  <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                        <input type="date" value={newSlotDate} onChange={e => setNewSlotDate(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/30" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                        <input type="time" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/30" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Duration (mins)</label>
+                        <select value={newSlotDuration} onChange={e => setNewSlotDuration(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/30">
+                          {[15, 30, 45, 60].map(m => <option key={m} value={m}>{m} mins</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Max attendees</label>
+                        <select value={newSlotMax} onChange={e => setNewSlotMax(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gaff-teal/30">
+                          {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <button
+                      onClick={createViewingSlot}
+                      disabled={addingSlot || !newSlotDate || !newSlotTime}
+                      className="w-full bg-gaff-teal text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gaff-teal-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {addingSlot && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                      {addingSlot ? 'Adding...' : 'Add Viewing Slot'}
+                    </button>
+                  </div>
+                )}
+                {viewingSlots.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-4">No upcoming viewing slots. Add one above.</p>
+                )}
+              </section>
+            )}
+
             {/* Viewing Slots */}
-            {viewingSlots.length > 0 && (
+            {viewingSlots.length > 0 && currentUser?.id !== listing?.user.id && (
               <section className="bg-white rounded-xl border border-gray-100 p-6 mb-5">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">📅 Upcoming Viewings</h2>
                 <div className="space-y-3">

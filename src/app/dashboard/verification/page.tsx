@@ -92,13 +92,16 @@ function VerificationPageInner() {
     } finally { setSubmitting(false); }
   };
 
+  const [devVerifyUrl, setDevVerifyUrl] = useState('');
+
   const sendEmailVerification = async () => {
     setSubmitting(true);
     try {
       const res = await fetch('/api/auth/verify-email', { method: 'POST' });
       const data = await res.json();
       setMessage(data.message || data.error);
-      setModal(null);
+      if (data.devVerifyUrl) setDevVerifyUrl(data.devVerifyUrl);
+      if (!data.devMode) setModal(null);
     } finally { setSubmitting(false); }
   };
 
@@ -191,7 +194,7 @@ function VerificationPageInner() {
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setModal(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-            {modal === 'email' && <EmailModal onSubmit={sendEmailVerification} submitting={submitting} />}
+            {modal === 'email' && <EmailModal onSubmit={sendEmailVerification} submitting={submitting} devVerifyUrl={devVerifyUrl} />}
             {modal === 'id' && <IDModal onSubmit={data => submitVerification('ID', data)} submitting={submitting} />}
             {modal === 'property' && <PropertyModal onSubmit={data => submitVerification('PROPERTY', data)} submitting={submitting} />}
             {modal === 'employment' && <EmploymentModal onSubmit={data => submitVerification('EMPLOYMENT', data)} submitting={submitting} />}
@@ -203,14 +206,24 @@ function VerificationPageInner() {
   );
 }
 
-function EmailModal({ onSubmit, submitting }: { onSubmit: () => void; submitting: boolean }) {
+function EmailModal({ onSubmit, submitting, devVerifyUrl }: { onSubmit: () => void; submitting: boolean; devVerifyUrl?: string }) {
   return (
     <div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">Email Verification</h3>
       <p className="text-sm text-gray-600 mb-4">We&apos;ll send a verification link to your registered email address.</p>
-      <button onClick={onSubmit} disabled={submitting} className="w-full py-2 bg-gaff-teal text-white rounded-lg font-medium hover:bg-gaff-teal-dark disabled:opacity-50">
-        {submitting ? 'Sending...' : 'Send Verification Email'}
-      </button>
+      {devVerifyUrl ? (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs font-semibold text-amber-800 mb-2">Email service not configured — click below to verify directly:</p>
+          <a href={devVerifyUrl} className="text-xs text-gaff-teal hover:underline break-all block">{devVerifyUrl}</a>
+          <a href={devVerifyUrl} className="mt-2 block w-full text-center py-2 bg-gaff-teal text-white rounded-lg font-medium text-sm hover:bg-gaff-teal-dark">
+            Verify Email Now
+          </a>
+        </div>
+      ) : (
+        <button onClick={onSubmit} disabled={submitting} className="w-full py-2 bg-gaff-teal text-white rounded-lg font-medium hover:bg-gaff-teal-dark disabled:opacity-50">
+          {submitting ? 'Sending...' : 'Send Verification Email'}
+        </button>
+      )}
     </div>
   );
 }

@@ -290,6 +290,27 @@ export default function MessagesPage() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Quick reply templates for landlords/agents */}
+            {me && (me.role === 'LANDLORD' || me.role === 'AGENT') && (
+              <div className="px-5 pt-2 flex gap-2 flex-wrap">
+                {[
+                  'Thanks for your enquiry! The property is still available.',
+                  'Viewing available — what dates suit you?',
+                  'Sorry, this property has been let.',
+                  'Please send your references and I\'ll be in touch.',
+                ].map(tpl => (
+                  <button
+                    key={tpl}
+                    type="button"
+                    onClick={() => setText(tpl)}
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-gaff-teal/30 text-gaff-teal hover:bg-gaff-teal/5 transition-colors truncate max-w-[180px]"
+                  >
+                    {tpl.slice(0, 30)}{tpl.length > 30 ? '…' : ''}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Input */}
             <div className="px-5 py-3 border-t border-gray-100">
               <div className="flex items-end gap-2">

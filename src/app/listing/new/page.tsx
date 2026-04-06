@@ -95,7 +95,6 @@ export default function NewListingPage() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data?.user) { window.location.href = '/auth/login'; return; }
-        if (data.user.role === 'TENANT') { window.location.href = '/search'; return; }
         setAuthorized(true);
         setAuthChecked(true);
       })

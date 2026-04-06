@@ -104,7 +104,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { name, phone, bio, avatar } = body;
+  const { name, phone, bio, avatar, rtbNumber, companyName } = body;
 
   // Update user fields
   const updateData: Record<string, unknown> = {};
@@ -118,12 +118,17 @@ export async function PUT(
     select: { id: true, name: true, phone: true, avatar: true, role: true },
   });
 
-  // Upsert profile for bio
-  if (typeof bio === 'string') {
+  // Upsert profile for bio, rtbNumber, companyName
+  const profileData: Record<string, unknown> = {};
+  if (typeof bio === 'string') profileData.bio = bio.trim() || null;
+  if (typeof rtbNumber === 'string') profileData.rtbNumber = rtbNumber.trim() || null;
+  if (typeof companyName === 'string') profileData.companyName = companyName.trim() || null;
+
+  if (Object.keys(profileData).length > 0) {
     await prisma.profile.upsert({
       where: { userId: id },
-      create: { userId: id, bio: bio.trim() || null },
-      update: { bio: bio.trim() || null },
+      create: { userId: id, ...profileData },
+      update: profileData,
     });
   }
 

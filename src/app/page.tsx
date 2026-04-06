@@ -217,7 +217,7 @@ export default async function Home() {
             <div>
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-slate-500">Live on the marketplace</p>
               <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900">Actual homes renters can move into.</h2>
-              <p className="text-slate-600 text-sm sm:text-base">These are sample listings from the waitlist cohort. Click through — every one uses the same verified workflow.</p>
+              <p className="text-slate-600 text-sm sm:text-base">Live listings from verified landlords and agents. Every card links to a real property with a working enquiry flow.</p>
             </div>
             <Link href="/search" className="ghost-pill w-full sm:w-auto text-center">
               Browse all listings

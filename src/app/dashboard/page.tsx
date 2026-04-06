@@ -53,6 +53,9 @@ const STATUS_LABELS: Record<string, string> = {
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
+  const [convCount, setConvCount] = useState(0);
+  const [viewingCount, setViewingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchListings = async () => {
@@ -67,11 +70,17 @@ export default function DashboardPage() {
     Promise.all([
       fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)),
       fetch('/api/listings?mine=true').then((r) => (r.ok ? r.json() : null)),
+      fetch('/api/saved-listings').then((r) => (r.ok ? r.json() : null)),
+      fetch('/api/messages').then((r) => (r.ok ? r.json() : null)),
+      fetch('/api/viewings/my').then((r) => (r.ok ? r.json() : null)),
     ])
-      .then(([userData, listingsData]) => {
+      .then(([userData, listingsData, savedData, msgsData, viewingsData]) => {
         if (!userData?.user) { window.location.href = '/auth/login'; return; }
         setUser(userData.user);
         setListings(listingsData?.listings ?? []);
+        setSavedCount(savedData?.savedListings?.length ?? 0);
+        setConvCount(msgsData?.conversations?.length ?? 0);
+        setViewingCount(viewingsData?.viewings?.length ?? 0);
       })
       .catch(() => { window.location.href = '/auth/login'; })
       .finally(() => setLoading(false));
@@ -106,23 +115,50 @@ export default function DashboardPage() {
   return (
     <>
       <div className="bg-gaff-slate text-white py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]} 👋</h1>
-          <p className="text-gray-400 text-sm mt-1">{roleLabels[user.role]}</p>
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]} 👋</h1>
+            <p className="text-gray-400 text-sm mt-1">{roleLabels[user.role]}</p>
+          </div>
+          <a href="/listing/new" className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            List a property
+          </a>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {user.role === 'TENANT' && <TenantDashboard listings={listings} />}
+        {/* Universal stats — visible to all users */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <StatCard icon="❤️" label="Saved Properties" value={savedCount} />
+          <StatCard icon="💬" label="Conversations" value={convCount} />
+          <StatCard icon="📅" label="Upcoming Viewings" value={viewingCount} />
+          <StatCard icon="🏠" label="My Listings" value={listings.length} />
+        </div>
+
+        {/* If a TENANT has created listings, show management section first */}
+        {user.role === 'TENANT' && listings.length > 0 && (
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gaff-slate">My Listings</h2>
+              <a href="/listing/new" className="bg-gaff-teal text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gaff-teal-dark transition-colors">+ Add Listing</a>
+            </div>
+            <div className="space-y-4">
+              {listings.map((l) => <ListingRow key={l.id} listing={l} onStatusChange={fetchListings} />)}
+            </div>
+          </section>
+        )}
+
+        {user.role === 'TENANT' && <TenantDashboard savedCount={savedCount} />}
         {user.role === 'LANDLORD' && (
           <>
-            <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} onRefresh={fetchListings} />
+            <LandlordDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} convCount={convCount} onRefresh={fetchListings} />
             <RecentEnquiries userId={user.id} />
           </>
         )}
         {user.role === 'AGENT' && (
           <>
-            <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} onRefresh={fetchListings} />
+            <AgentDashboard listings={listings} activeCount={activeListings.length} totalViews={totalViews} convCount={convCount} onRefresh={fetchListings} />
             <RecentEnquiries userId={user.id} />
           </>
         )}
@@ -307,7 +343,7 @@ interface RecommendedListing {
   images?: { url: string }[];
 }
 
-function TenantDashboard({ listings }: { listings: Listing[] }) {
+function TenantDashboard({ savedCount }: { savedCount: number }) {
   const [recommended, setRecommended] = useState<RecommendedListing[]>([]);
   const [recLoading, setRecLoading] = useState(true);
 
@@ -331,12 +367,6 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
           <span className="text-[#0C9B8A] text-xl">→</span>
         </div>
       </a>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard icon="❤️" label="Saved Properties" value={listings.length} />
-        <StatCard icon="🔍" label="Saved Searches" value={0} />
-        <StatCard icon="🎯" label="AI Matches" value={recommended.length} />
-      </div>
 
       {/* AI Matches Section */}
       <h2 className="text-xl font-bold text-gaff-slate mb-4">🎯 AI Matches</h2>
@@ -384,7 +414,7 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
       <UpcomingViewings role="TENANT" />
 
       <h2 className="text-xl font-bold text-gaff-slate mb-4">Saved Properties</h2>
-      {listings.length === 0 ? (
+      {savedCount === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <div className="text-4xl mb-3">❤️</div>
           <h3 className="text-lg font-semibold text-gaff-slate mb-1">No saved properties</h3>
@@ -392,8 +422,10 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
           <a href="/search" className="inline-block bg-gaff-teal text-white px-6 py-2.5 rounded-lg font-semibold text-sm">Browse properties</a>
         </div>
       ) : (
-        <div className="space-y-4">
-          {listings.map((l) => <ListingRow key={l.id} listing={l} onStatusChange={() => {}} />)}
+        <div className="text-center py-8 bg-white rounded-2xl border border-gray-100">
+          <div className="text-4xl mb-3">❤️</div>
+          <p className="text-gaff-slate font-semibold">{savedCount} saved {savedCount === 1 ? 'property' : 'properties'}</p>
+          <a href="/dashboard/saved" className="inline-block mt-3 text-sm font-medium text-gaff-teal hover:underline">View all saved →</a>
         </div>
       )}
     </>
@@ -402,7 +434,7 @@ function TenantDashboard({ listings }: { listings: Listing[] }) {
 
 /* ─── Landlord Dashboard ───────────────────────────────────────── */
 
-function LandlordDashboard({ listings, activeCount, totalViews, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; onRefresh: () => void }) {
+function LandlordDashboard({ listings, activeCount, totalViews, convCount, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; convCount: number; onRefresh: () => void }) {
   const [filter, setFilter] = useState<FilterTab>('ALL');
 
   const counts: Record<FilterTab, number> = {
@@ -423,7 +455,7 @@ function LandlordDashboard({ listings, activeCount, totalViews, onRefresh }: { l
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard icon="🏠" label="Active Listings" value={activeCount} />
         <StatCard icon="👁" label="Total Views" value={totalViews} />
-        <StatCard icon="💬" label="Messages" value={0} />
+        <StatCard icon="💬" label="Enquiries" value={convCount} />
       </div>
 
       <UpcomingViewings role="LANDLORD" />
@@ -455,7 +487,7 @@ function LandlordDashboard({ listings, activeCount, totalViews, onRefresh }: { l
 
 /* ─── Agent Dashboard ──────────────────────────────────────────── */
 
-function AgentDashboard({ listings, activeCount, totalViews, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; onRefresh: () => void }) {
+function AgentDashboard({ listings, activeCount, totalViews, convCount, onRefresh }: { listings: Listing[]; activeCount: number; totalViews: number; convCount: number; onRefresh: () => void }) {
   const [filter, setFilter] = useState<FilterTab>('ALL');
 
   const counts: Record<FilterTab, number> = {
@@ -477,7 +509,7 @@ function AgentDashboard({ listings, activeCount, totalViews, onRefresh }: { list
         <StatCard icon="📋" label="Portfolio" value={listings.length} />
         <StatCard icon="✅" label="Active" value={activeCount} />
         <StatCard icon="👁" label="Total Views" value={totalViews} />
-        <StatCard icon="👥" label="Tenant Pipeline" value={0} />
+        <StatCard icon="💬" label="Enquiries" value={convCount} />
       </div>
 
       <AgencySection />

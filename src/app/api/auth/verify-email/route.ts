@@ -72,8 +72,29 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
   if (user.emailVerified) return NextResponse.json({ error: "Already verified" }, { status: 400 });
 
-  await sendVerificationEmail(user.id, user.email);
-  return NextResponse.json({ message: "Verification email sent" });
+  const token = generateToken(user.id);
+  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${token}`;
+
+  if (!AGENTMAIL_API_KEY) {
+    // Dev mode: return token directly so the UI can show it
+    return NextResponse.json({
+      message: "Email service not configured — use the link below to verify.",
+      devVerifyUrl: verifyUrl,
+      devMode: true,
+    });
+  }
+
+  try {
+    await sendVerificationEmail(user.id, user.email);
+    return NextResponse.json({ message: "Verification email sent to " + user.email });
+  } catch {
+    // Fallback: return token on email failure
+    return NextResponse.json({
+      message: "Could not send email — use the link below to verify.",
+      devVerifyUrl: verifyUrl,
+      devMode: true,
+    });
+  }
 }
 
 // GET: Verify token from email link
